@@ -14,7 +14,7 @@ import io
 import base64
 import asyncio
 from neonize.client import NewClient
-from neonize.events import MessageEv, ConnectedEv, QRWaitEv
+from neonize.events import MessageEv, ConnectedEv, QREv
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -357,11 +357,11 @@ def start_whatsapp_bot():
         wa_status = "connected"
         print("✅ WhatsApp Linked Successfully!")
 
-    @wa_client.event(QRWaitEv)
-    def on_qr(_: NewClient, event: QRWaitEv):
+    @wa_client.event(QREv)
+    def on_qr(_: NewClient, event: QREv):
         global wa_status, wa_qr_base64
         wa_status = "qr"
-        qr = segno.make(event.qr)
+        qr = segno.make(list(event.Codes)[0])
         out = io.BytesIO()
         qr.save(out, kind="png", scale=5)
         wa_qr_base64 = base64.b64encode(out.getvalue()).decode()
