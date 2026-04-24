@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action AI — Agentic Terminal</title>
+    <meta name="description" content="Action AI is an agentic AI assistant that runs shell commands on your Linux system.">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ==================== SETTINGS MODAL ==================== -->
+<div id="settings-overlay" class="overlay hidden">
+    <div class="modal brutal-box">
+        <div class="modal-header">
+            <h2>⚙ SETTINGS</h2>
+            <button id="close-settings-btn" class="icon-btn" title="Close">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- API Key -->
+            <div class="field-group">
+                <label for="api-key-input">OpenRouter API Key</label>
+                <p class="field-hint">Get yours free at <a href="https://openrouter.ai" target="_blank">openrouter.ai</a></p>
+                <div class="input-row">
+                    <input id="api-key-input" type="password" class="brutal-input-sm" placeholder="sk-or-v1-...">
+                    <button id="toggle-key-btn" class="icon-btn" title="Show/Hide">👁</button>
+                </div>
+                <div id="key-status" class="key-status hidden"></div>
+            </div>
+
+            <!-- Model Selector -->
+            <div class="field-group">
+                <label for="model-search">Select Model</label>
+                <p class="field-hint">Pick from popular providers or search below.</p>
+                <input id="model-search" type="text" class="brutal-input-sm" placeholder="Search models...">
+                <div id="model-list" class="model-list">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="selected-model-display">
+                    Selected: <span id="selected-model-name">None</span>
+                </div>
+            </div>
+
+            <!-- WhatsApp Integration -->
+            <div class="field-group">
+                <label>WhatsApp Integration</label>
+                <p class="field-hint">Link your WhatsApp to talk to Action AI directly from your phone!</p>
+                <div class="whatsapp-setup-box brutal-box" style="padding: 16px; background: var(--grey-50); margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+                    <div id="wa-status-text" style="font-weight: 700; font-size: 14px; color: var(--blue-dark);">Checking status...</div>
+                    <img id="wa-qr-img" src="" alt="WhatsApp QR Code" class="hidden" style="max-width: 200px; border: 4px solid #fff; box-shadow: 2px 2px 0 #000;">
+                    <button id="wa-link-btn" class="brutal-btn btn-blue hidden" style="width: 100%;">LINK WHATSAPP</button>
+                    <p id="wa-instructions" class="hidden" style="font-size: 12px; color: var(--grey-600); margin: 0;">Scan this QR code using WhatsApp (Linked Devices).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button id="save-settings-btn" class="brutal-btn btn-blue">SAVE SETTINGS</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ONBOARDING SCREEN ==================== -->
+<div id="onboarding-screen" class="overlay hidden">
+    <div class="modal brutal-box onboarding">
+        <div class="onboarding-icon">🤖</div>
+        <h1>Welcome to <span class="blue-text">Action AI</span></h1>
+        <p>An agentic AI that can run commands on your Linux system to get things done.</p>
+
+        <div class="field-group">
+            <label for="onboard-api-key">Your OpenRouter API Key</label>
+            <p class="field-hint">Free tier available at <a href="https://openrouter.ai" target="_blank">openrouter.ai</a>. Your key is stored only in your browser.</p>
+            <div class="input-row">
+                <input id="onboard-api-key" type="password" class="brutal-input-sm" placeholder="sk-or-v1-...">
+                <button id="onboard-toggle-key" class="icon-btn" title="Show/Hide">👁</button>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Choose a Starting Model</label>
+            <div id="onboard-model-list" class="model-list"></div>
+        </div>
+
+        <div id="onboard-error" class="error-banner hidden"></div>
+
+        <button id="onboard-save-btn" class="brutal-btn btn-blue full-width">GET STARTED →</button>
+    </div>
+</div>
+
+<!-- ==================== MAIN LAYOUT ==================== -->
+<div id="app" class="app-layout hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Logo block -->
+        <div class="sidebar-logo-block">
+            <div class="logo-text-wrap">
+                <span class="logo-text">ACTION AI</span>
+                <span class="logo-sub">Agentic Terminal</span>
+            </div>
+        </div>
+
+        <!-- Model badge -->
+        <div class="sidebar-section">
+            <p class="sidebar-label">ACTIVE MODEL</p>
+            <div id="sidebar-model" class="sidebar-model-badge">—</div>
+        </div>
+
+        <!-- API Status -->
+        <div class="sidebar-section">
+            <p class="sidebar-label">API STATUS</p>
+            <div id="sidebar-status" class="status-pill status-ok">● Connected</div>
+        </div>
+
+        <!-- Toggle switches -->
+        <div class="sidebar-section">
+            <p class="sidebar-label">AGENT OPTIONS</p>
+            <div class="toggle-list">
+
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span class="toggle-title">Auto Execute</span>
+                        <span class="toggle-desc">Run cmds automatically</span>
+                    </div>
+                    <label class="brute-toggle">
+                        <input type="checkbox" id="toggle-auto-exec" checked>
+                        <span class="brute-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span class="toggle-title">Safe Mode</span>
+                        <span class="toggle-desc">Block dangerous cmds</span>
+                    </div>
+                    <label class="brute-toggle">
+                        <input type="checkbox" id="toggle-safe-mode">
+                        <span class="brute-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span class="toggle-title">Show Output</span>
+                        <span class="toggle-desc">Display terminal results</span>
+                    </div>
+                    <label class="brute-toggle">
+                        <input type="checkbox" id="toggle-show-output" checked>
+                        <span class="brute-slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span class="toggle-title">Stream Mode</span>
+                        <span class="toggle-desc">Live status updates</span>
+                    </div>
+                    <label class="brute-toggle">
+                        <input type="checkbox" id="toggle-stream" checked>
+                        <span class="brute-slider"></span>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="sidebar-section">
+            <p class="sidebar-label">ACTIONS</p>
+            <div class="sidebar-actions">
+                <button id="open-settings-btn" class="sidebar-btn">⚙ Settings</button>
+                <button id="clear-chat-btn" class="sidebar-btn btn-danger-side">🗑 Clear Chat</button>
+            </div>
+        </div>
+
+        <!-- Memory panel -->
+        <div class="sidebar-section" id="memory-section">
+            <div class="memory-header">
+                <p class="sidebar-label" style="margin:0">🧠 MEMORIES</p>
+                <button id="clear-memories-btn" class="mem-clear-btn" title="Clear all memories">✕ Clear</button>
+            </div>
+            <div id="memory-list" class="memory-list">
+                <span class="memory-empty">No memories yet</span>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <p>Commands run in your shell.<br>Powered by OpenRouter.</p>
+        </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="chat-area">
+        <header class="chat-header brutal-box">
+            <div class="chat-title">
+                <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Sidebar">☰</button>
+                <h1>AGENT TERMINAL</h1>
+                <span id="header-model-badge" class="model-chip">—</span>
+            </div>
+            <div id="header-status" class="header-status">
+                <span class="dot-green"></span> Active
+            </div>
+        </header>
+
+        <div id="chat-messages" class="messages">
+            <div class="message ai-message brutal-box">
+                <span class="msg-label">Action AI</span>
+                <div class="msg-body">
+                    👋 Ready! Ask me to run commands, create files, manage your system, or anything else. I'll think step by step and get it done.
+                </div>
+            </div>
+        </div>
+
+        <!-- Attachment preview bar -->
+        <div id="attachment-bar" class="attachment-bar hidden"></div>
+
+        <div class="input-bar brutal-box">
+            <!-- Hidden file input -->
+            <input type="file" id="file-input" accept="*/*" multiple style="display:none">
+
+            <button id="attach-btn" class="input-icon-btn" title="Attach file (+)">+</button>
+
+            <div class="input-wrap">
+                <textarea id="user-input" class="brutal-textarea" placeholder="e.g. Show me my disk usage and top 5 largest folders..." rows="2"></textarea>
+            </div>
+
+            <button id="stop-btn" class="brutal-btn btn-stop hidden" title="Stop generation">■ STOP</button>
+            <button id="send-btn" class="brutal-btn btn-blue send-btn" title="Send (Enter)">
+                <span id="send-label">SEND</span>
+                <span id="send-loader" class="btn-loader hidden">⟳</span>
+            </button>
+        </div>
+    </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
