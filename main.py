@@ -85,8 +85,15 @@ def build_memory_block() -> str:
     return "\n".join(lines)
 
 def build_system_prompt() -> str:
-    base = """You are Action AI, a powerful agentic AI assistant running on a Linux system.
+    base = """You are WillaAI, a powerful agentic AI assistant running on a Linux system.
 You can execute shell commands on the user's system to help accomplish tasks.
+
+DYNAMIC MODE:
+- You should act as a helpful chatbot for conversational queries.
+- Only use the <cmd> tag if you actually need to perform a task, check system state, or run a tool.
+- If the user is just chatting or asking a general question, respond as a normal AI assistant.
+- Do NOT run commands for things you already know or for simple greetings.
+
 To run a command, output it EXACTLY like this: <cmd>your command here</cmd>
 Rules:
 - Only one <cmd> block per response.
@@ -98,9 +105,7 @@ MEMORY SYSTEM:
 You have a persistent memory store that survives across sessions. Use it proactively.
 To save something: <remember key="descriptive_key">value</remember>
 - Save user name, preferred directories, project paths, preferences, editor choice, etc.
-- You can include multiple <remember> blocks in any response (including the final answer).
-- Keys should be snake_case and descriptive (e.g. "user_name", "main_project_dir").
-- Do NOT save passwords, API keys, or sensitive secrets.
+- You can include multiple <remember> blocks in any response.
 - Read your memories before answering — they tell you what you already know about this user.
 """
     memory_block = build_memory_block()
@@ -112,46 +117,85 @@ class ChatRequest(BaseModel):
     messages: List[Dict[str, str]]
     api_key: str
     model: str
+    provider: str = "openrouter"
 
+PROVIDER_ENDPOINTS = {
+    "openrouter": "https://openrouter.ai/api/v1/chat/completions",
+    "openai": "https://api.openai.com/v1/chat/completions",
+    "anthropic": "https://api.anthropic.com/v1/messages",
+    "groq": "https://api.groq.com/openai/v1/chat/completions",
+    "ollama": "http://localhost:11434/v1/chat/completions",
+    "google": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+}
 
-async def call_openrouter(messages: List[Dict[str, str]], api_key: str, model: str) -> str:
+async def call_llm_provider(messages: List[Dict[str, str]], api_key: str, model: str, provider: str = "openrouter") -> str:
     if not api_key or not api_key.strip():
-        raise ValueError("No API key provided. Please configure your API key in Settings.")
+        raise ValueError("No API key/endpoint provided. Please configure it in Settings.")
+
+    endpoint = PROVIDER_ENDPOINTS.get(provider, PROVIDER_ENDPOINTS["openrouter"])
+    
+    if provider == "google":
+        # Google OpenAI shim usually prefers key in URL or Bearer
+        endpoint = f"{endpoint}?key={api_key.strip()}"
+        # Strip google/ prefix if it came from OpenRouter list
+        if model.startswith("google/"):
+            model = model.replace("google/", "")
+        # Map specific common versions
+        model_map = {
+            "gemini-flash-1.5": "gemini-1.5-flash",
+            "gemini-pro-1.5": "gemini-1.5-pro",
+            "gemini-flash-1.5-8b": "gemini-1.5-flash-8b"
+        }
+        model = model_map.get(model, model)
+
+    if provider == "ollama" and api_key.startswith("http"):
+        endpoint = f"{api_key.rstrip('/')}/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {api_key.strip()}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:8000",
-        "X-Title": "Action AI",
     }
-    payload = {
-        "model": model,
-        "messages": [{"role": "system", "content": build_system_prompt()}] + messages,
-    }
+
+    if provider == "openrouter":
+        headers["Authorization"] = f"Bearer {api_key.strip()}"
+        headers["HTTP-Referer"] = "http://localhost:8000"
+        headers["X-Title"] = "WillaAI"
+    elif provider == "anthropic":
+        headers["x-api-key"] = api_key.strip()
+        headers["anthropic-version"] = "2023-06-01"
+    else:
+        # OpenAI, Groq, Ollama
+        headers["Authorization"] = f"Bearer {api_key.strip()}"
+
+    # Handle payload differences (Anthropic)
+    if provider == "anthropic":
+        payload = {
+            "model": model,
+            "max_tokens": 4096,
+            "system": build_system_prompt(),
+            "messages": messages,
+        }
+    else:
+        payload = {
+            "model": model,
+            "messages": [{"role": "system", "content": build_system_prompt()}] + messages,
+        }
+
     async with httpx.AsyncClient(timeout=90.0) as client:
         try:
-            response = await client.post(OPENROUTER_URL, headers=headers, json=payload)
+            response = await client.post(endpoint, headers=headers, json=payload)
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
             body = {}
-            try:
-                body = e.response.json()
-            except Exception:
-                pass
+            try: body = e.response.json()
+            except Exception: pass
             err_msg = body.get("error", {}).get("message", str(e))
-            status = e.response.status_code
-            if status == 401:
-                raise ValueError("Invalid API key. Please check your key in Settings.")
-            elif status == 402:
-                raise ValueError("Insufficient credits on your OpenRouter account.")
-            elif status == 429:
-                raise ValueError("Rate limit exceeded. Please wait a moment and try again.")
-            else:
-                raise ValueError(f"OpenRouter API error ({status}): {err_msg}")
-        except httpx.TimeoutException:
-            raise ValueError("Request timed out. The model may be overloaded — please try again.")
+            raise ValueError(f"{provider.capitalize()} API error: {err_msg}")
+        except Exception as e:
+            raise ValueError(f"Request failed: {str(e)}")
 
     data = response.json()
+    if provider == "anthropic":
+        return data["content"][0]["text"]
     return data["choices"][0]["message"]["content"]
 
 
@@ -213,12 +257,12 @@ async def chat_endpoint(req: ChatRequest):
             yield json.dumps({"type": "status", "message": "Thinking..."}) + "\n"
 
             try:
-                response_text = await call_openrouter(messages, req.api_key, req.model)
+                response_text = await call_llm_provider(messages, req.api_key, req.model, req.provider)
             except ValueError as e:
                 yield json.dumps({"type": "error", "message": str(e)}) + "\n"
                 return
             except Exception as e:
-                yield json.dumps({"type": "error", "message": f"Unexpected error: {str(e)}"}) + "\n"
+                yield json.dumps({"type": "error", "message": f"Unexpected error: {str(e)})"}) + "\n"
                 return
 
             messages.append({"role": "assistant", "content": response_text})
@@ -300,9 +344,10 @@ async def wa_agent_loop(chat, original_message, text: str):
     cfg = load_config()
     api_key = cfg.get("action_ai_key", "")
     model = cfg.get("action_ai_model_id", "openrouter/auto")
+    provider = cfg.get("action_ai_provider", "openrouter")
 
     if not api_key:
-        wa_client.reply_message(chat, "⚠ Action AI is not configured. Set your OpenRouter API key in the web interface first.", original_message)
+        wa_client.reply_message(chat, "⚠ WillaAI is not configured. Set your OpenRouter API key in the web interface first.", original_message)
         return
 
     if text.strip().lower() in ["clear", "reset"]:
@@ -320,7 +365,7 @@ async def wa_agent_loop(chat, original_message, text: str):
     while iteration < max_iterations:
         iteration += 1
         try:
-            response_text = await call_openrouter(messages, api_key, model)
+            response_text = await call_llm_provider(messages, api_key, model, provider)
         except Exception as e:
             wa_client.reply_message(chat, f"⚠ Error: {str(e)}", original_message)
             return
@@ -354,17 +399,25 @@ def start_whatsapp_bot():
     @wa_client.event(ConnectedEv)
     def on_connected(_: NewClient, __: ConnectedEv):
         global wa_status
+        print("DEBUG: WhatsApp ConnectedEv fired!", flush=True)
         wa_status = "connected"
-        print("✅ WhatsApp Linked Successfully!")
+        print("✅ WhatsApp Linked Successfully!", flush=True)
 
     @wa_client.event(QREv)
     def on_qr(_: NewClient, event: QREv):
         global wa_status, wa_qr_base64
+        print("DEBUG: on_qr triggered!", flush=True)
+        codes = list(event.Codes)
+        if not codes:
+            print("DEBUG: WhatsApp QREv fired but Codes list is empty!", flush=True)
+            return
+        print(f"DEBUG: WhatsApp QREv fired! Codes: {len(codes)}", flush=True)
         wa_status = "qr"
-        qr = segno.make(list(event.Codes)[0])
+        qr = segno.make(codes[0])
         out = io.BytesIO()
         qr.save(out, kind="png", scale=5)
         wa_qr_base64 = base64.b64encode(out.getvalue()).decode()
+        print("DEBUG: QR Code generated and saved to wa_qr_base64", flush=True)
 
     @wa_client.event(MessageEv)
     def on_message(client: NewClient, message: MessageEv):
@@ -412,6 +465,7 @@ if os.path.exists("action_ai_whatsapp.sqlite3"):
 class ConfigPayload(BaseModel):
     action_ai_key: str
     action_ai_model_id: str
+    action_ai_provider: str = "openrouter"
 
 @app.post("/api/config")
 async def update_config(cfg: ConfigPayload):
@@ -424,5 +478,6 @@ async def get_config():
     cfg = load_config()
     return JSONResponse({
         "has_api_key": bool(cfg.get("action_ai_key")),
-        "model_id": cfg.get("action_ai_model_id", "")
+        "model_id": cfg.get("action_ai_model_id", ""),
+        "provider": cfg.get("action_ai_provider", "openrouter")
     })

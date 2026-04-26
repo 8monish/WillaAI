@@ -74,7 +74,12 @@ const STATE = {
     safeMode: false,
     showOutput: true,
     streamMode: true,
+    provider: localStorage.getItem('ai_provider') || 'openrouter',
+    theme: localStorage.getItem('app_theme') || 'light'
 };
+
+// Apply theme on load
+if (STATE.theme === 'dark') document.body.classList.add('dark-theme');
 
 // Dangerous command patterns for safe mode
 const DANGEROUS_PATTERNS = [
@@ -98,28 +103,34 @@ const els = {
     onboardToggleKey: $('onboard-toggle-key'),
     onboardModelList: $('onboard-model-list'),
     onboardSaveBtn: $('onboard-save-btn'),
+    onboardProvider: $('onboard-provider'),
     onboardError: $('onboard-error'),
 
     // Settings modal
     closeSettingsBtn: $('close-settings-btn'),
     apiKeyInput: $('api-key-input'),
+    providerSelect: $('provider-select'),
     toggleKeyBtn: $('toggle-key-btn'),
     modelSearch: $('model-search'),
     modalModelList: $('model-list'),
     selectedModelName: $('selected-model-name'),
     keyStatus: $('key-status'),
     saveSettingsBtn: $('save-settings-btn'),
+    resetSettingsBtn: $('reset-settings-btn'),
     waStatusText: $('wa-status-text'),
     waQrImg: $('wa-qr-img'),
     waLinkBtn: $('wa-link-btn'),
     waInstructions: $('wa-instructions'),
-
+    
     // Sidebar / header
     openSettingsBtn: $('open-settings-btn'),
     clearChatBtn: $('clear-chat-btn'),
     sidebarModel: $('sidebar-model'),
     sidebarStatus: $('sidebar-status'),
     headerModelBadge: $('header-model-badge'),
+    themeToggle: $('theme-toggle-btn'),
+    sidebarToggleBtn: $('sidebar-toggle-btn'),
+    appLayout: $('app'),
 
     // Toggles
     toggleAutoExec: $('toggle-auto-exec'),
@@ -131,21 +142,16 @@ const els = {
     memoryList: $('memory-list'),
     clearMemoriesBtn: $('clear-memories-btn'),
 
-    // New controls
-    sidebarToggleBtn: $('sidebar-toggle-btn'),
-    sidebar: $('sidebar'),
-    appLayout: $('app'),
-    stopBtn: $('stop-btn'),
-    attachBtn: $('attach-btn'),
-    fileInput: $('file-input'),
-    attachmentBar: $('attachment-bar'),
-
     // Chat
     messages: $('chat-messages'),
     userInput: $('user-input'),
     sendBtn: $('send-btn'),
     sendLabel: $('send-label'),
     sendLoader: $('send-loader'),
+    stopBtn: $('stop-btn'),
+    attachBtn: $('attach-btn'),
+    fileInput: $('file-input'),
+    attachmentBar: $('attachment-bar'),
 };
 
 /* =============================================
@@ -224,36 +230,46 @@ function filterModels(query, container, selectedId, onSelect) {
    PERSIST SETTINGS
    ============================================= */
 function saveToStorage() {
-    localStorage.setItem('action_ai_key', STATE.apiKey);
-    localStorage.setItem('action_ai_model_id', STATE.modelId);
-    localStorage.setItem('action_ai_model_name', STATE.modelName);
-    localStorage.setItem('action_ai_auto_exec',   STATE.autoExec);
-    localStorage.setItem('action_ai_safe_mode',   STATE.safeMode);
-    localStorage.setItem('action_ai_show_output', STATE.showOutput);
-    localStorage.setItem('action_ai_stream',      STATE.streamMode);
+    localStorage.setItem('willa_ai_key', STATE.apiKey);
+    localStorage.setItem('willa_ai_model_id', STATE.modelId);
+    localStorage.setItem('willa_ai_model_name', STATE.modelName);
+    localStorage.setItem('willa_ai_provider', STATE.provider);
+    localStorage.setItem('willa_ai_auto_exec',   STATE.autoExec);
+    localStorage.setItem('willa_ai_safe_mode',   STATE.safeMode);
+    localStorage.setItem('willa_ai_show_output', STATE.showOutput);
+    localStorage.setItem('willa_ai_stream',      STATE.streamMode);
     
     // Sync critical config with backend for WhatsApp bot
     fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            action_ai_key: STATE.apiKey,
-            action_ai_model_id: STATE.modelId
+            willa_ai_key: STATE.apiKey,
+            willa_ai_model_id: STATE.modelId,
+            willa_ai_provider: STATE.provider
         })
     }).catch(e => console.error('Failed to sync config', e));
 }
 
 function loadFromStorage() {
-    STATE.apiKey     = localStorage.getItem('action_ai_key') || '';
-    STATE.modelId    = localStorage.getItem('action_ai_model_id') || '';
-    STATE.modelName  = localStorage.getItem('action_ai_model_name') || '';
-    STATE.autoExec   = localStorage.getItem('action_ai_auto_exec')   !== 'false';
-    STATE.safeMode   = localStorage.getItem('action_ai_safe_mode')   === 'true';
-    STATE.showOutput = localStorage.getItem('action_ai_show_output') !== 'false';
-    STATE.streamMode = localStorage.getItem('action_ai_stream')      !== 'false';
+    STATE.apiKey     = localStorage.getItem('willa_ai_key') || '';
+    STATE.modelId    = localStorage.getItem('willa_ai_model_id') || '';
+    STATE.modelName  = localStorage.getItem('willa_ai_model_name') || '';
+    STATE.provider   = localStorage.getItem('willa_ai_provider') || 'openrouter';
+    STATE.autoExec   = localStorage.getItem('willa_ai_auto_exec')   !== 'false';
+    STATE.safeMode   = localStorage.getItem('willa_ai_safe_mode')   === 'true';
+    STATE.showOutput = localStorage.getItem('willa_ai_show_output') !== 'false';
+    STATE.streamMode = localStorage.getItem('willa_ai_stream')      !== 'false';
     
     // Initial sync on load if we have keys
-    if (STATE.apiKey) saveToStorage();
+    if (STATE.apiKey) {
+        saveToStorage();
+        els.app.classList.remove('hidden');
+    } else {
+        // Show onboarding if no API key
+        els.onboardScreen.classList.remove('hidden');
+        els.app.classList.add('hidden');
+    }
 }
 
 function syncToggleUI() {
@@ -330,6 +346,7 @@ function showOnboarding() {
     els.onboardModelList.querySelectorAll('.model-item').forEach(el => {
         if (el.dataset.id === 'openrouter/auto') el.scrollIntoView({ block: 'nearest' });
     });
+    els.app.classList.add('hidden');
     els.onboardScreen.classList.remove('hidden');
 }
 
@@ -352,6 +369,7 @@ els.onboardSaveBtn.addEventListener('click', () => {
     STATE.apiKey = key;
     STATE.modelId = onboardSelectedId;
     STATE.modelName = onboardSelectedName;
+    STATE.provider = els.onboardProvider.value;
     saveToStorage();
     els.onboardScreen.classList.add('hidden');
     els.app.classList.remove('hidden');
@@ -410,6 +428,7 @@ function openSettings() {
     settingsSelectedId = STATE.modelId;
     settingsSelectedName = STATE.modelName;
     els.apiKeyInput.value = STATE.apiKey;
+    els.providerSelect.value = STATE.provider;
     els.selectedModelName.textContent = STATE.modelName || 'None';
     buildModelList(els.modalModelList, settingsSelectedId, (id, name) => {
         settingsSelectedId = id;
@@ -477,6 +496,7 @@ els.saveSettingsBtn.addEventListener('click', () => {
     STATE.apiKey = key;
     STATE.modelId = settingsSelectedId;
     STATE.modelName = settingsSelectedName;
+    STATE.provider = els.providerSelect.value;
     saveToStorage();
     updateUI();
     showKeyStatus('Settings saved!', true);
@@ -522,10 +542,10 @@ function addAiMessage(text) {
 
 function addActionMessage(cmd) {
     const div = document.createElement('div');
-    div.className = 'action-message';
+    div.className = 'message ai-message brutal-box action-msg hidden';
     div.innerHTML = `
-        <div class="action-header">🛠 Running Command</div>
-        <div class="action-cmd">${escapeHtml(cmd)}</div>
+        <span class="msg-label">🛠 ACTION</span>
+        <div class="msg-body"><code>${escapeHtml(cmd)}</code></div>
     `;
     els.messages.appendChild(div);
     scrollBottom();
@@ -533,10 +553,10 @@ function addActionMessage(cmd) {
 
 function addResultMessage(output) {
     const div = document.createElement('div');
-    div.className = 'result-message';
+    div.className = 'message ai-message brutal-box result-msg hidden';
     div.innerHTML = `
-        <div class="result-header">📟 Terminal Output</div>
-        <div class="result-output">${escapeHtml(output)}</div>
+        <span class="msg-label">📊 RESULT</span>
+        <div class="msg-body"><pre>${escapeHtml(output)}</pre></div>
     `;
     els.messages.appendChild(div);
     scrollBottom();
@@ -756,6 +776,7 @@ async function sendMessage() {
                 messages: STATE.history,
                 api_key: STATE.apiKey,
                 model: STATE.modelId,
+                provider: STATE.provider
             }),
             signal: abortController.signal,
         });
@@ -843,16 +864,21 @@ els.clearChatBtn.addEventListener('click', () => {
     STATE.history = [];
     els.messages.innerHTML = `
         <div class="message ai-message brutal-box">
-            <span class="msg-label">Action AI</span>
+            <span class="msg-label">WillaAI</span>
             <div class="msg-body">Chat cleared. Ready for a new task!</div>
         </div>
     `;
     updateSidebarStatus(true);
 });
 
-/* =============================================
-   SEND EVENTS
-   ============================================= */
+// =============================================
+// INITIALIZATION & THEME
+// =============================================
+els.themeToggle?.addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    STATE.theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+    localStorage.setItem('app_theme', STATE.theme);
+});
 els.sendBtn.addEventListener('click', sendMessage);
 els.stopBtn.addEventListener('click', () => {
     if (abortController) abortController.abort();
@@ -871,8 +897,6 @@ loadFromStorage();
 bindToggles();
 
 if (!STATE.apiKey || !STATE.modelId) {
-    onboardSelectedId = 'openrouter/auto';
-    onboardSelectedName = 'Auto (Best Available)';
     showOnboarding();
 } else {
     els.app.classList.remove('hidden');
@@ -880,8 +904,8 @@ if (!STATE.apiKey || !STATE.modelId) {
     syncToggleUI();
     loadMemoryPanel();
     // Restore sidebar state
-    if (localStorage.getItem('action_ai_sidebar_hidden') === 'true') {
-        els.appLayout.classList.add('sidebar-hidden');
+    if (localStorage.getItem('willa_ai_sidebar_hidden') === 'true') {
+        els.app.classList.add('sidebar-hidden');
         els.sidebarToggleBtn.textContent = '▶';
         els.sidebarToggleBtn.title = 'Show Sidebar';
     }

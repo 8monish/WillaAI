@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+config.json
+memories.json
+action_ai_whatsapp.sqlite3
+server.log
+.DS_Store
