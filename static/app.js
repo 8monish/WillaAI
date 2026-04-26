@@ -244,9 +244,9 @@ function saveToStorage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            willa_ai_key: STATE.apiKey,
-            willa_ai_model_id: STATE.modelId,
-            willa_ai_provider: STATE.provider
+            action_ai_key: STATE.apiKey,
+            action_ai_model_id: STATE.modelId,
+            action_ai_provider: STATE.provider
         })
     }).catch(e => console.error('Failed to sync config', e));
 }
@@ -542,7 +542,7 @@ function addAiMessage(text) {
 
 function addActionMessage(cmd) {
     const div = document.createElement('div');
-    div.className = 'message ai-message brutal-box action-msg hidden';
+    div.className = 'message ai-message brutal-box action-msg';
     div.innerHTML = `
         <span class="msg-label">🛠 ACTION</span>
         <div class="msg-body"><code>${escapeHtml(cmd)}</code></div>
@@ -553,7 +553,7 @@ function addActionMessage(cmd) {
 
 function addResultMessage(output) {
     const div = document.createElement('div');
-    div.className = 'message ai-message brutal-box result-msg hidden';
+    div.className = 'message ai-message brutal-box result-msg';
     div.innerHTML = `
         <span class="msg-label">📊 RESULT</span>
         <div class="msg-body"><pre>${escapeHtml(output)}</pre></div>
@@ -910,3 +910,10 @@ if (!STATE.apiKey || !STATE.modelId) {
         els.sidebarToggleBtn.title = 'Show Sidebar';
     }
 }
+
+els.resetSettingsBtn.addEventListener('click', () => {
+    if(confirm('Reset all settings?')) {
+        localStorage.clear();
+        location.reload();
+    }
+});
