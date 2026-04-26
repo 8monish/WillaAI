@@ -25,6 +25,21 @@
     --radius: 3px;
 }
 
+body.dark-theme {
+    --paper:       #121212;
+    --white:       #1e1e1e;
+    --blue-light:  #1e293b;
+    --grey-50:     #0f172a;
+    --grey-100:    #1e293b;
+    --grey-200:    #334155;
+    --grey-400:    #64748b;
+    --grey-600:    #94a3b8;
+    --black:       #f8fafc;
+    --yellow:      #422006;
+    --yellow-dark: #fde047;
+    --red-light:   #450a0a;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

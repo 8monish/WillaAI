@@ -1,4 +1,5 @@
 {
-  "action_ai_key": "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",
-  "action_ai_model_id": "openrouter/auto"
+  "action_ai_key": "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",
+  "action_ai_model_id": "openrouter/auto",
+  "action_ai_provider": "openrouter"
 }
