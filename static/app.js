@@ -663,7 +663,7 @@ els.sidebarToggleBtn.addEventListener('click', () => {
     const hidden = els.appLayout.classList.contains('sidebar-hidden');
     els.sidebarToggleBtn.textContent = hidden ? '▶' : '☰';
     els.sidebarToggleBtn.title = hidden ? 'Show Sidebar' : 'Hide Sidebar';
-    localStorage.setItem('action_ai_sidebar_hidden', hidden);
+    localStorage.setItem('willa_ai_sidebar_hidden', hidden);
 });
 
 /* =============================================
