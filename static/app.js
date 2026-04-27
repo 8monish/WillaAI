@@ -146,8 +146,6 @@ const els = {
     messages: $('chat-messages'),
     userInput: $('user-input'),
     sendBtn: $('send-btn'),
-    sendLabel: $('send-label'),
-    sendLoader: $('send-loader'),
     stopBtn: $('stop-btn'),
     attachBtn: $('attach-btn'),
     fileInput: $('file-input'),
@@ -701,6 +699,7 @@ els.fileInput.addEventListener('change', () => {
 });
 
 function renderAttachmentBar() {
+    if (!els.attachmentBar) return;
     els.attachmentBar.innerHTML = '';
     if (!ATTACHMENTS.length) {
         els.attachmentBar.classList.add('hidden');
@@ -739,7 +738,7 @@ function setSending(busy) {
     els.sendBtn.classList.toggle('hidden', busy);
     els.stopBtn.classList.toggle('hidden', !busy);
     els.userInput.disabled = busy;
-    els.attachBtn.disabled = busy;
+    if (els.attachBtn) els.attachBtn.disabled = busy;
 }
 
 async function sendMessage() {
@@ -871,49 +870,64 @@ els.clearChatBtn.addEventListener('click', () => {
     updateSidebarStatus(true);
 });
 
+
 // =============================================
-// INITIALIZATION & THEME
+// INITIALIZATION & THEME (wrapped in DOMContentLoaded)
 // =============================================
-els.themeToggle?.addEventListener('click', () => {
-    document.body.classList.toggle('dark-theme');
-    STATE.theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
-    localStorage.setItem('app_theme', STATE.theme);
-});
-els.sendBtn.addEventListener('click', sendMessage);
-els.stopBtn.addEventListener('click', () => {
-    if (abortController) abortController.abort();
-});
-els.userInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-});
+document.addEventListener('DOMContentLoaded', () => {
+    els.themeToggle?.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        STATE.theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+        localStorage.setItem('app_theme', STATE.theme);
+    });
+    els.sendBtn.addEventListener('click', sendMessage);
+    els.stopBtn.addEventListener('click', () => {
+        if (abortController) abortController.abort();
+    });
+    els.userInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    // Auto-grow textarea
+    els.userInput.addEventListener('input', () => {
+        els.userInput.style.height = 'auto';
+        els.userInput.style.height = Math.min(els.userInput.scrollHeight, 140) + 'px';
+    });
+    // Onboarding provider change refreshes model list
+    els.onboardProvider.addEventListener('change', () => {
+        buildModelList(els.onboardModelList, onboardSelectedId, (id, name) => {
+            onboardSelectedId = id;
+            onboardSelectedName = name;
+        });
+    });
 
-/* =============================================
-   INIT
-   ============================================= */
-loadFromStorage();
-bindToggles();
+    /* =============================================
+       INIT
+       ============================================= */
+    loadFromStorage();
+    bindToggles();
 
-if (!STATE.apiKey || !STATE.modelId) {
-    showOnboarding();
-} else {
-    els.app.classList.remove('hidden');
-    updateUI();
-    syncToggleUI();
-    loadMemoryPanel();
-    // Restore sidebar state
-    if (localStorage.getItem('willa_ai_sidebar_hidden') === 'true') {
-        els.app.classList.add('sidebar-hidden');
-        els.sidebarToggleBtn.textContent = '▶';
-        els.sidebarToggleBtn.title = 'Show Sidebar';
+    if (!STATE.apiKey || !STATE.modelId) {
+        showOnboarding();
+    } else {
+        els.app.classList.remove('hidden');
+        updateUI();
+        syncToggleUI();
+        loadMemoryPanel();
+        // Restore sidebar state
+        if (localStorage.getItem('willa_ai_sidebar_hidden') === 'true') {
+            els.app.classList.add('sidebar-hidden');
+            els.sidebarToggleBtn.textContent = '▶';
+            els.sidebarToggleBtn.title = 'Show Sidebar';
+        }
     }
-}
 
-els.resetSettingsBtn.addEventListener('click', () => {
-    if(confirm('Reset all settings?')) {
-        localStorage.clear();
-        location.reload();
-    }
+    els.resetSettingsBtn.addEventListener('click', () => {
+        if(confirm('Reset all settings?')) {
+            localStorage.clear();
+            location.reload();
+        }
+    });
 });
