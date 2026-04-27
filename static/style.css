@@ -842,6 +842,7 @@ a { color: var(--blue-dark); font-weight: 600; }
     flex-shrink: 0;
     transition: transform 0.08s, box-shadow 0.08s;
     border-radius: 0;
+    color: var(--black);
 }
 .sidebar-toggle-btn:hover { background: var(--grey-100); }
 .sidebar-toggle-btn:active { transform: translate(2px, 2px); box-shadow: none; }
