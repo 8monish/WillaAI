@@ -924,9 +924,9 @@ a { color: var(--blue-dark); font-weight: 600; }
     gap: 8px;
     padding: 8px 14px;
     background: var(--grey-50);
-    border-top: 2px solid var(--grey-200);
-    border-left: var(--border);
-    border-right: var(--border);
+    border: var(--border);
+    border-bottom: none;
+    box-shadow: 4px 0 0 var(--black);
 }
 
 .attachment-chip {
