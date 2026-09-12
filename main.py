@@ -12,9 +12,15 @@ import threading
 import segno
 import io
 import base64
-import asyncio
-from neonize.client import NewClient
-from neonize.events import MessageEv, ConnectedEv, QREv
+try:
+    from neonize.client import NewClient
+    from neonize.events import MessageEv, ConnectedEv, QREv
+    NEONIZE_AVAILABLE = True
+except ImportError:
+    NewClient = None
+    MessageEv = ConnectedEv = QREv = None
+    NEONIZE_AVAILABLE = False
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,14 +40,14 @@ whatsapp_history = [] # Shared history for WhatsApp user
 def load_config() -> Dict[str, str]:
     if os.path.exists(CONFIG_FILE):
         try:
-            with open(CONFIG_FILE, "r") as f:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return {}
     return {}
 
 def save_config(cfg: Dict[str, str]):
-    with open(CONFIG_FILE, "w") as f:
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)
 
 # =============================================
@@ -50,14 +56,14 @@ def save_config(cfg: Dict[str, str]):
 def load_memories() -> Dict[str, str]:
     if os.path.exists(MEMORIES_FILE):
         try:
-            with open(MEMORIES_FILE, "r") as f:
+            with open(MEMORIES_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return {}
     return {}
 
 def save_memories(memories: Dict[str, str]):
-    with open(MEMORIES_FILE, "w") as f:
+    with open(MEMORIES_FILE, "w", encoding="utf-8") as f:
         json.dump(memories, f, indent=2)
 
 def extract_and_save_memories(text: str) -> List[Dict[str, str]]:
@@ -264,7 +270,7 @@ def execute_command(command: str) -> str:
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
-    with open("static/index.html") as f:
+    with open("static/index.html", "r", encoding="utf-8") as f:
         return f.read()
 
 
@@ -419,6 +425,10 @@ async def wa_agent_loop(chat, original_message, text: str):
 
 def start_whatsapp_bot():
     global wa_client, wa_status, wa_qr_base64
+    if not NEONIZE_AVAILABLE:
+        wa_status = "unavailable"
+        print("WhatsApp integration disabled: neonize library is not installed.")
+        return
     if wa_client is not None:
         return
     wa_status = "starting"
@@ -509,3 +519,49 @@ async def get_config():
         "model_id": cfg.get("action_ai_model_id", ""),
         "provider": cfg.get("action_ai_provider", "openrouter")
     })
+
+
+# =============================================
+# AUTHENTICATION API ENDPOINTS (Google OAuth)
+# =============================================
+class GoogleAuthRequest(BaseModel):
+    credential: str
+
+@app.get("/api/auth/config")
+async def get_auth_config():
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    return JSONResponse({
+        "google_client_id": client_id,
+        "is_configured": bool(client_id)
+    })
+
+@app.post("/api/auth/google")
+async def verify_google_token(payload: GoogleAuthRequest):
+    credential = payload.credential.strip()
+    if not credential:
+        raise HTTPException(status_code=400, detail="Token credential is required.")
+
+    # Validate against Google tokeninfo endpoint
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={credential}")
+            if resp.status_code == 200:
+                data = resp.json()
+                return JSONResponse({
+                    "success": True,
+                    "user": {
+                        "id": data.get("sub"),
+                        "name": data.get("name", "User"),
+                        "email": data.get("email", ""),
+                        "picture": data.get("picture", ""),
+                        "given_name": data.get("given_name", "User"),
+                        "provider": "google"
+                    }
+                })
+            else:
+                error_body = resp.text
+                # If Google validation fails, return 401
+                raise HTTPException(status_code=401, detail=f"Invalid Google token: {error_body}")
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to contact Google auth server: {str(e)}")
+
