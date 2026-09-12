@@ -31,11 +31,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MEMORIES_FILE = "memories.json"
 
-# Per-session CWD — simple global for single-user use
 current_cwd = os.path.expanduser("~")
 
 CONFIG_FILE = "config.json"
-whatsapp_history = [] # Shared history for WhatsApp user
+whatsapp_history = []
 
 def load_config() -> Dict[str, str]:
     if os.path.exists(CONFIG_FILE):
@@ -50,9 +49,6 @@ def save_config(cfg: Dict[str, str]):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)
 
-# =============================================
-# MEMORY SYSTEM
-# =============================================
 def load_memories() -> Dict[str, str]:
     if os.path.exists(MEMORIES_FILE):
         try:
@@ -67,7 +63,6 @@ def save_memories(memories: Dict[str, str]):
         json.dump(memories, f, indent=2)
 
 def extract_and_save_memories(text: str) -> List[Dict[str, str]]:
-    """Find <remember key="...">...</remember> tags, persist them, return list of saved items."""
     saved = []
     pattern = re.compile(r'<remember\s+key=["\']([^"\']+)["\']>(.*?)</remember>', re.DOTALL)
     matches = pattern.findall(text)
@@ -145,8 +140,6 @@ Save the user's name, preferred tools, project paths, editor, etc.
         base += f"\n{memory_block}\n"
     return base
 
-
-
 class ChatRequest(BaseModel):
     messages: List[Dict[str, str]]
     api_key: str
@@ -169,12 +162,9 @@ async def call_llm_provider(messages: List[Dict[str, str]], api_key: str, model:
     endpoint = PROVIDER_ENDPOINTS.get(provider, PROVIDER_ENDPOINTS["openrouter"])
     
     if provider == "google":
-        # Google OpenAI shim usually prefers key in URL or Bearer
         endpoint = f"{endpoint}?key={api_key.strip()}"
-        # Strip google/ prefix if it came from OpenRouter list
         if model.startswith("google/"):
             model = model.replace("google/", "")
-        # Map specific common versions
         model_map = {
             "gemini-flash-1.5": "gemini-1.5-flash",
             "gemini-pro-1.5": "gemini-1.5-pro",
@@ -197,10 +187,8 @@ async def call_llm_provider(messages: List[Dict[str, str]], api_key: str, model:
         headers["x-api-key"] = api_key.strip()
         headers["anthropic-version"] = "2023-06-01"
     else:
-        # OpenAI, Groq, Ollama
         headers["Authorization"] = f"Bearer {api_key.strip()}"
 
-    # Handle payload differences (Anthropic)
     if provider == "anthropic":
         payload = {
             "model": model,
@@ -231,7 +219,6 @@ async def call_llm_provider(messages: List[Dict[str, str]], api_key: str, model:
     if provider == "anthropic":
         return data["content"][0]["text"]
     return data["choices"][0]["message"]["content"]
-
 
 def execute_command(command: str) -> str:
     global current_cwd
@@ -267,12 +254,10 @@ def execute_command(command: str) -> str:
     except Exception as e:
         return f"Error executing command: {str(e)}"
 
-
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
     with open("static/index.html", "r", encoding="utf-8") as f:
         return f.read()
-
 
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
@@ -301,12 +286,10 @@ async def chat_endpoint(req: ChatRequest):
 
             messages.append({"role": "assistant", "content": response_text})
 
-            # Extract and persist any <remember> tags from the LLM response
             saved_memories = extract_and_save_memories(response_text)
             if saved_memories:
                 yield json.dumps({"type": "memories_saved", "memories": saved_memories}) + "\n"
 
-            # Strip <remember> tags from visible text
             visible_text = re.sub(r'<remember[^>]*>.*?</remember>', '', response_text, flags=re.DOTALL).strip()
 
             cmd_match = re.search(r"<cmd>(.*?)</cmd>", visible_text, re.DOTALL)
@@ -325,14 +308,9 @@ async def chat_endpoint(req: ChatRequest):
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")
 
-
-# =============================================
-# MEMORY API ENDPOINTS
-# =============================================
 @app.get("/api/memories")
 async def get_memories():
     return JSONResponse(load_memories())
-
 
 class MemoryItem(BaseModel):
     key: str
@@ -345,7 +323,6 @@ async def add_memory(item: MemoryItem):
     save_memories(memories)
     return JSONResponse({"status": "ok", "key": item.key, "value": item.value})
 
-
 @app.delete("/api/memories/{key}")
 async def delete_memory(key: str):
     memories = load_memories()
@@ -355,19 +332,11 @@ async def delete_memory(key: str):
     save_memories(memories)
     return JSONResponse({"status": "deleted", "key": key})
 
-
 @app.delete("/api/memories")
 async def clear_memories():
     save_memories({})
     return JSONResponse({"status": "cleared"})
 
-
-
-
-
-# =============================================
-# WHATSAPP INTEGRATION (NEONIZE)
-# =============================================
 wa_client = None
 wa_status = "disconnected"
 wa_qr_base64 = ""
@@ -422,12 +391,10 @@ async def wa_agent_loop(chat, original_message, text: str):
             return
     wa_client.reply_message(chat, "⚠ Max agent iterations reached.", original_message)
 
-
 def start_whatsapp_bot():
     global wa_client, wa_status, wa_qr_base64
     if not NEONIZE_AVAILABLE:
         wa_status = "unavailable"
-        print("WhatsApp integration disabled: neonize library is not installed.")
         return
     if wa_client is not None:
         return
@@ -437,25 +404,19 @@ def start_whatsapp_bot():
     @wa_client.event(ConnectedEv)
     def on_connected(_: NewClient, __: ConnectedEv):
         global wa_status
-        print("DEBUG: WhatsApp ConnectedEv fired!", flush=True)
         wa_status = "connected"
-        print("✅ WhatsApp Linked Successfully!", flush=True)
 
     @wa_client.event(QREv)
     def on_qr(_: NewClient, event: QREv):
         global wa_status, wa_qr_base64
-        print("DEBUG: on_qr triggered!", flush=True)
         codes = list(event.Codes)
         if not codes:
-            print("DEBUG: WhatsApp QREv fired but Codes list is empty!", flush=True)
             return
-        print(f"DEBUG: WhatsApp QREv fired! Codes: {len(codes)}", flush=True)
         wa_status = "qr"
         qr = segno.make(codes[0])
         out = io.BytesIO()
         qr.save(out, kind="png", scale=5)
         wa_qr_base64 = base64.b64encode(out.getvalue()).decode()
-        print("DEBUG: QR Code generated and saved to wa_qr_base64", flush=True)
 
     @wa_client.event(MessageEv)
     def on_message(client: NewClient, message: MessageEv):
@@ -466,7 +427,6 @@ def start_whatsapp_bot():
         if not body:
             return
         
-        # Run async agent loop in a new event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(wa_agent_loop(chat, message, body))
@@ -475,9 +435,7 @@ def start_whatsapp_bot():
     try:
         wa_client.connect()
     except Exception as e:
-        print(f"WhatsApp Error: {e}")
         wa_status = "error"
-
 
 @app.post("/api/whatsapp/start")
 async def api_wa_start():
@@ -492,14 +450,9 @@ async def api_wa_status():
         "qr_base64": wa_qr_base64 if wa_status == "qr" else ""
     })
 
-# Auto-start if session file exists
 if os.path.exists("action_ai_whatsapp.sqlite3"):
     threading.Thread(target=start_whatsapp_bot, daemon=True).start()
 
-
-# =============================================
-# CONFIG API ENDPOINTS (For WhatsApp Bot Sync)
-# =============================================
 class ConfigPayload(BaseModel):
     action_ai_key: str
     action_ai_model_id: str
@@ -512,7 +465,6 @@ async def update_config(cfg: ConfigPayload):
 
 @app.get("/api/config")
 async def get_config():
-    # Only return existence of keys so UI knows they exist
     cfg = load_config()
     return JSONResponse({
         "has_api_key": bool(cfg.get("action_ai_key")),
@@ -520,10 +472,6 @@ async def get_config():
         "provider": cfg.get("action_ai_provider", "openrouter")
     })
 
-
-# =============================================
-# AUTHENTICATION API ENDPOINTS (Google OAuth)
-# =============================================
 class GoogleAuthRequest(BaseModel):
     credential: str
 
@@ -541,7 +489,6 @@ async def verify_google_token(payload: GoogleAuthRequest):
     if not credential:
         raise HTTPException(status_code=400, detail="Token credential is required.")
 
-    # Validate against Google tokeninfo endpoint
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={credential}")
@@ -560,8 +507,6 @@ async def verify_google_token(payload: GoogleAuthRequest):
                 })
             else:
                 error_body = resp.text
-                # If Google validation fails, return 401
                 raise HTTPException(status_code=401, detail=f"Invalid Google token: {error_body}")
     except httpx.RequestError as e:
         raise HTTPException(status_code=500, detail=f"Failed to contact Google auth server: {str(e)}")
-
