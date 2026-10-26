@@ -1,65 +1,78 @@
-# WillaAI 🤖
+# RipeAI
 
-WillaAI is a neobrutalist, agentic terminal interface that enables you to interact with your Linux environment via LLM-powered command execution. It allows you to run shell commands, manage files, and store persistent memories through a sleek, high-contrast web interface or directly via WhatsApp.
+RipeAI is a neo-brutalist agentic terminal interface for interacting with your Linux environment through locally installed models. Gemini prompts run in the project workspace and do not go to a hosted model API.
 
-## Features
+Whenever you prompt RipeAI, the selected model streams its response and tool execution in real time, and can run shell commands in the project workspace.
 
-- **Google Sign-In & Auth**: Built-in Google OAuth 2.0 authentication with Google Identity Services (GIS), session persistence, user profile avatar in sidebar, and Guest mode support.
-- **Multi-Provider Support**: Connect via OpenRouter, OpenAI, Anthropic (Claude), Google (Gemini), Groq, or Ollama (Local).
-- **Agentic Loop**: Executes shell commands via `<cmd>...</cmd>` tags with safe execution checks.
-- **Persistent Memory**: Stores and retrieves facts using `<remember key="...">...</remember>` tags.
-- **Neobrutalist UI**: A high-contrast, paper-white theme with bold borders and hard shadows.
-- **WhatsApp Integration**: Link your personal WhatsApp via QR code (using `neonize`) to control your machine remotely.
-- **File Attachments**: Support for uploading text and image files to provide context to the AI.
-- **Onboarding Flow**: Smooth first-time setup for API keys and model selection.
+---
 
-## Tech Stack
+## Key Features
 
-- **Backend**: FastAPI (Python), `httpx`, `segno` (QR Codes), `neonize` (WhatsApp).
-- **Frontend**: Vanilla HTML/CSS/JS (Neobrutalism design), Google Identity Services.
-- **LLM**: Powered by OpenRouter, OpenAI, Anthropic, Google Gemini, Groq, Ollama.
+- **Local Gemini mode**: Send prompts to the installed Gemini model, with streamed responses and system tool execution in the project workspace.
+- **GPT-6 Luna**: Switch to the locally available coding model for repo analysis and terminal task automation.
+- **Embedded Interactive System Terminal**: Built-in sliding terminal drawer running native Linux bash commands (`monish@ripe:~$`) with quick action chips (`uname -a`, `free -h`, `git status`, etc.).
+- **Direct Shell Prefix**: Prefix any message with `$ ` or `! ` in the chat to execute directly in bash.
+- **Persistent Memory Layer**: Automatically remembers user preferences, file paths, and environment details across sessions using `<remember key="...">...</remember>` tags stored in `memories.json`.
+- **WhatsApp Remote Agent**: Link your WhatsApp via QR code (`neonize`) to control your machine remotely from your phone.
+- **Neo-brutalist interface**: Hard borders, offset shadows, high-contrast accent colors, and real-time streaming.
 
-## Setup
+---
+
+## Model Flow
+
+```
+User Prompt (Web UI or WhatsApp)
+             │
+             ▼
+     RipeAI Backend (FastAPI)
+             │
+    ┌────────┴──────────────────┐
+    ▼                           ▼
+Gemini 3.8 Flash (local)  GPT-6 Luna
+  • Project workspace        • Shell tool execution
+  • Streaming responses      • Direct repository review
+             │
+             ▼
+Real-Time NDJSON Streaming + Live Terminal Execution
+```
+
+---
+
+## Quick Start
 
 1. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Google OAuth Setup (Optional for Google Sign-In)**:
-   - Go to [Google Cloud Console](https://console.cloud.google.com/) -> **APIs & Services** -> **Credentials**.
-   - Create an **OAuth 2.0 Client ID** (Web application) with Authorized JavaScript Origin: `http://localhost:8000`.
-   - Add your Client ID to `.env`:
-     ```env
-     GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-     ```
-   *(You can also use the built-in Guest / Demo mode at any time!)*
-
-3. **Run the Server**:
+2. **Start RipeAI Server**:
    ```bash
-   uvicorn main:app --port 8000
+   ./run.sh
    ```
-   *The server will start at http://localhost:8000.*
 
-4. **Configure**:
-   Open the web UI, sign in with Google or as a Guest, and enter your AI API key in the settings/onboarding.
+3. **Open in Browser**:
+   Navigate to [http://localhost:8000](http://localhost:8000). Click **"Launch RipeAI as Guest"** to immediately start issuing prompts and commands!
 
-5. **Link WhatsApp**:
-   In the settings modal, click "Link WhatsApp" and scan the generated QR code.
+The **Use Gemini 3.8 Flash (High)** button in the sidebar selects that model. Prompts run in the project folder by default. Set `RIPEAI_WORKSPACE` to use a different folder, or `RIPEAI_PORT` to change the server port.
 
-## Environment Variables
+---
 
-Create a `.env` file with:
-```env
-OPENROUTER_API_KEY=your_key_here
-GOOGLE_CLIENT_ID=your_google_client_id_here
-```
+## WhatsApp Integration (Optional)
 
-## Security Warning
+In RipeAI, WhatsApp connects to your local system engine:
+1. Open **Models / Settings** in the web dashboard.
+2. Under **WhatsApp Remote Agent**, click **Link WhatsApp**.
+3. Scan the QR code with WhatsApp (Linked Devices).
+4. Send a request from your phone to run tasks remotely on your machine.
 
-WillaAI executes shell commands. While it includes a "Safe Mode", it is intended for local use. Do **NOT** expose the web server or the WhatsApp bot to the public internet without additional security layers (like NSJail or Docker sandboxing).
+---
+
+## Security
+
+RipeAI executes shell commands directly on your Linux environment. While Safe Mode guards against destructive patterns (like `rm -rf /`), RipeAI is designed for local, trusted use. Do not expose this server publicly without authorization or sandboxing layers.
+
+---
 
 ## License
 
-MIT
-
+MIT © RipeAI
