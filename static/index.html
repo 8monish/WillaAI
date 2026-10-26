@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WillaAI — Intelligent Agent Terminal</title>
+    <title>RipeAI — Intelligent Agent Terminal</title>
     <meta name="description"
-        content="WillaAI is an intelligent, minimal agentic AI assistant and Linux terminal copilot.">
-    <link rel="stylesheet" href="/static/style.css">
+        content="RipeAI is an intelligent, agentic terminal copilot for your local system.">
+    <link rel="stylesheet" href="/static/style.css?v=neo-brutalism-6">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800;900&display=swap"
         rel="stylesheet">
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -20,10 +20,10 @@
     <!-- ==================== SIGN IN SCREEN ==================== -->
     <div id="signin-screen" class="overlay">
         <div class="modal-card signin-card-clean">
-            <div class="signin-brand-badge">W</div>
-            <h1 class="signin-title-clean">Welcome to WillaAI</h1>
+            <div class="signin-brand-badge"><img src="/static/ripeai-mark.svg" alt="RipeAI logo"></div>
+            <h1 class="signin-title-clean">Welcome to RipeAI</h1>
             <p class="signin-desc-clean">
-                Your intelligent agentic terminal & system copilot. Sign in to start executing and chatting.
+                Your intelligent terminal and system copilot, connected to the tools available on your machine.
             </p>
 
             <div style="width: 100%; margin-bottom: 8px;">
@@ -48,7 +48,7 @@
                 </div>
 
                 <button id="guest-signin-btn" class="btn-guest-clean">
-                    Continue as Guest
+                    Launch RipeAI as Guest
                 </button>
             </div>
 
@@ -56,61 +56,90 @@
         </div>
     </div>
 
+    <!-- ==================== ONBOARDING / ENGINE SCREEN ==================== -->
+    <div id="onboarding-screen" class="overlay hidden">
+        <div class="modal-card" style="max-width: 520px; padding: 28px; text-align: center;">
+            <div class="signin-brand-badge"><img src="/static/ripeai-mark.svg" alt="RipeAI logo"></div>
+            <h1 class="signin-title-clean">RipeAI System Terminal</h1>
+            <p class="signin-desc-clean">
+                Gemini 3.8 Flash (High) runs locally on this machine, with no hosted API key required.
+            </p>
+
+            <div class="engine-cards-grid">
+                <div class="engine-card active" data-engine="antigravity" data-model="gemini-3.8-flash-high">
+                    <div class="engine-badge-pill">ACTIVE & READY</div>
+                    <div class="engine-title"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3.5 20h17L12 3Z"/><path d="m12 10 3 6H9l3-6Z"/></svg> Gemini 3.8 Flash (High)</div>
+                    <div class="engine-desc">Runs locally in the RipeAI project folder. No hosted API key required.</div>
+                </div>
+                <div class="engine-card" data-engine="codex" data-model="gpt-6-luna">
+                    <div class="engine-badge-pill">INSTALLED</div>
+                    <div class="engine-title"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5-6 7 6 7M16 5l6 7-6 7M14 3l-4 18"/></svg> GPT-6 Luna</div>
+                    <div class="engine-desc">Direct system coding & shell agent execution without approvals</div>
+                </div>
+            </div>
+
+            <button id="onboard-save-btn" class="clean-btn clean-btn-primary" style="width: 100%; margin-top: 22px; padding: 12px; font-weight: 600;">
+                Start Using RipeAI →
+            </button>
+        </div>
+    </div>
+
     <!-- ==================== SETTINGS MODAL ==================== -->
     <div id="settings-overlay" class="overlay hidden">
-        <div class="modal-card" style="max-width: 520px;">
+        <div class="modal-card" style="max-width: 560px;">
             <div class="modal-header-clean">
-                <h2>Settings</h2>
+                <h2>RipeAI Model Settings</h2>
                 <button id="close-settings-btn" class="icon-btn-ghost" title="Close">✕</button>
             </div>
 
             <div class="modal-body-clean">
-                <!-- API Provider & Key -->
-                <div class="field-group">
-                    <label class="field-label" for="provider-select">API Provider</label>
-                    <select id="provider-select" class="clean-select">
-                        <option value="openrouter">OpenRouter (Universal)</option>
-                        <option value="openai">OpenAI (GPT-4o / o1 / o3)</option>
-                        <option value="anthropic">Anthropic (Claude 3.7 / 3.5)</option>
-                        <option value="groq">Groq (Ultra Fast)</option>
-                        <option value="ollama">Ollama (Local / Self-Hosted)</option>
-                        <option value="google">Google (Gemini 2.5 / 2.0)</option>
-                    </select>
-                </div>
-
-                <div class="field-group">
-                    <label class="field-label" for="api-key-input">API Key / Endpoint</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input id="api-key-input" type="password" class="clean-input"
-                            placeholder="sk-or-v1-...">
-                        <button id="toggle-key-btn" class="icon-btn-ghost" style="border: 1px solid var(--border-subtle);" title="Show/Hide">👁</button>
-                    </div>
-                    <div id="key-status" class="key-status hidden"></div>
-                </div>
-
                 <!-- Model Selector -->
                 <div class="field-group">
-                    <label class="field-label" for="model-search">Active Model</label>
-                    <p class="field-hint">Search from Claude 3.7, GPT-4.5, DeepSeek R1, Gemini 2.5, etc.</p>
-                    <input id="model-search" type="text" class="clean-input" placeholder="Search models (e.g. claude, r1, o3, gemini)...">
+                    <label class="field-label" for="engine-select">Active Model</label>
+                    <select id="engine-select" class="clean-select">
+                        <option value="antigravity">Gemini 3.8 Flash (High)</option>
+                        <option value="codex">GPT-6 Luna</option>
+                        <option value="terminal">Local Bash</option>
+                    </select>
+                    <p class="field-hint">Gemini and GPT-6 Luna prompts run through locally installed models in the selected workspace.</p>
+                </div>
+
+                <!-- Gemini Model Selector -->
+                <div class="field-group" id="antigravity-model-group">
+                    <label class="field-label">Gemini Model</label>
                     <div id="model-list" class="model-list-clean" style="margin-top: 6px;">
                         <!-- Populated by JS -->
                     </div>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                        Selected: <span id="selected-model-name" style="font-weight: 600; color: var(--accent-primary);">None</span>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
+                        Selected: <span id="selected-model-name" style="font-weight: 600; color: var(--accent-primary);">Gemini 3.8 Flash (High)</span>
+                    </div>
+                </div>
+
+                <!-- Model Status -->
+                <div class="field-group">
+                    <label class="field-label">Model Status</label>
+                    <div id="cli-health-container" class="cli-health-box">
+                        <div class="cli-health-row">
+                            <span class="cli-name">Gemini 3.8 Flash (High)</span>
+                            <span class="cli-status-badge ok" id="health-gemini-engine">Detecting...</span>
+                        </div>
+                        <div class="cli-health-row">
+                            <span class="cli-name">GPT-6 Luna</span>
+                            <span class="cli-status-badge ok" id="health-codex">Detecting...</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Google OAuth Configuration -->
                 <div class="field-group">
-                    <label class="field-label" for="google-client-id-input">Google OAuth Client ID</label>
+                    <label class="field-label" for="google-client-id-input">Google OAuth Client ID (Optional)</label>
                     <input id="google-client-id-input" type="text" class="clean-input"
                         placeholder="xxxx.apps.googleusercontent.com">
                 </div>
 
                 <!-- WhatsApp Integration -->
                 <div class="field-group">
-                    <label class="field-label">WhatsApp Remote Control</label>
+                    <label class="field-label">WhatsApp Remote Agent</label>
                     <div style="padding: 14px; background: var(--bg-surface-hover); border-radius: var(--radius-md); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
                         <div id="wa-status-text" style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">
                             Checking status...</div>
@@ -118,61 +147,16 @@
                             style="max-width: 180px; border-radius: var(--radius-sm); border: 2px solid var(--border-medium);">
                         <button id="wa-link-btn" class="clean-btn clean-btn-primary hidden" style="width: 100%;">Link WhatsApp</button>
                         <p id="wa-instructions" class="hidden" style="font-size: 11.5px; color: var(--text-muted);">
-                            Scan this QR code using WhatsApp (Linked Devices).
+                            Scan this QR code using WhatsApp (Linked Devices) to chat with RipeAI remotely.
                         </p>
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer-clean">
-                <button id="reset-settings-btn" class="clean-btn clean-btn-danger">Reset All</button>
-                <button id="save-settings-btn" class="clean-btn clean-btn-primary">Save Changes</button>
+                <button id="reset-settings-btn" class="clean-btn clean-btn-danger">Reset Defaults</button>
+                <button id="save-settings-btn" class="clean-btn clean-btn-primary">Save Model</button>
             </div>
-        </div>
-    </div>
-
-    <!-- ==================== ONBOARDING SCREEN ==================== -->
-    <div id="onboarding-screen" class="overlay hidden">
-        <div class="modal-card" style="max-width: 480px; padding: 28px; text-align: center;">
-            <div class="signin-brand-badge">W</div>
-            <h1 class="signin-title-clean">Configure WillaAI</h1>
-            <p class="signin-desc-clean">
-                Provide your API key to let WillaAI execute tasks and run terminal actions for you.
-            </p>
-
-            <div class="field-group" style="text-align: left;">
-                <label class="field-label" for="onboard-provider">Provider</label>
-                <select id="onboard-provider" class="clean-select">
-                    <option value="openrouter">OpenRouter (Universal)</option>
-                    <option value="openai">OpenAI (GPT-4o)</option>
-                    <option value="anthropic">Anthropic (Claude)</option>
-                    <option value="groq">Groq</option>
-                    <option value="ollama">Ollama (Local)</option>
-                    <option value="google">Google (Gemini)</option>
-                </select>
-            </div>
-
-            <div class="field-group" style="text-align: left; margin-top: 10px;">
-                <label class="field-label" for="onboard-api-key">API Key</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="password" id="onboard-api-key" class="clean-input" placeholder="Paste your API key...">
-                    <button id="onboard-toggle-key" class="icon-btn-ghost" style="border: 1px solid var(--border-subtle);">👁</button>
-                </div>
-                <p class="field-hint">Your API key is securely stored in your local browser.</p>
-            </div>
-
-            <div class="field-group" style="text-align: left; margin-top: 10px;">
-                <label class="field-label">Starting Model</label>
-                <div id="onboard-model-list" class="model-list-clean" style="max-height: 140px;">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <div id="onboard-error" class="error-banner hidden" style="margin-top: 12px;"></div>
-
-            <button id="onboard-save-btn" class="clean-btn clean-btn-primary" style="width: 100%; margin-top: 18px; padding: 10px;">
-                Get Started
-            </button>
         </div>
     </div>
 
@@ -183,9 +167,9 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="brand-logo-wrap">
-                    <div class="brand-icon">W</div>
-                    <span class="brand-title">WillaAI</span>
-                    <span class="brand-pill">v1.2</span>
+                    <div class="brand-icon"><img src="/static/ripeai-mark.svg" alt="RipeAI logo"></div>
+                    <span class="brand-title">RipeAI</span>
+                    <span class="brand-pill">Local Models</span>
                 </div>
             </div>
 
@@ -202,10 +186,11 @@
             <div class="sidebar-body">
                 <!-- Active Model Widget -->
                 <div>
-                    <div class="sidebar-label">Model</div>
-                    <div id="sidebar-model" class="sidebar-model-badge" title="Click to change model">
-                        Auto (Best Available)
+                    <div class="sidebar-label">Active Model</div>
+                    <div id="sidebar-model" class="sidebar-model-badge" title="Click to change engine/model">
+                        Gemini 3.8 Flash (High)
                     </div>
+                    <button id="use-gemini-model-btn" class="btn-new-chat sidebar-use-model" type="button">Use Gemini 3.8 Flash (High)</button>
                 </div>
 
                 <!-- Agent Options Toggles -->
@@ -215,7 +200,7 @@
                         <div class="toggle-row">
                             <div class="toggle-info">
                                 <span class="toggle-title">Auto Run</span>
-                                <span class="toggle-desc">Execute commands</span>
+                                <span class="toggle-desc">Execute tool commands</span>
                             </div>
                             <label class="clean-switch">
                                 <input type="checkbox" id="toggle-auto-exec" checked>
@@ -228,7 +213,7 @@
                                 <span class="toggle-desc">Guard dangerous actions</span>
                             </div>
                             <label class="clean-switch">
-                                <input type="checkbox" id="toggle-safe-mode" checked>
+                                <input type="checkbox" id="toggle-safe-mode">
                                 <span class="clean-slider"></span>
                             </label>
                         </div>
@@ -244,8 +229,8 @@
                         </div>
                         <div class="toggle-row">
                             <div class="toggle-info">
-                                <span class="toggle-title">Stream Status</span>
-                                <span class="toggle-desc">Real-time reasoning</span>
+                                <span class="toggle-title">Live Stream</span>
+                                <span class="toggle-desc">Token-by-token output</span>
                             </div>
                             <label class="clean-switch">
                                 <input type="checkbox" id="toggle-stream" checked>
@@ -270,10 +255,10 @@
             <!-- User Profile & Navigation Footer -->
             <div class="sidebar-footer">
                 <div class="user-profile-card" id="sidebar-user-section">
-                    <img id="sidebar-user-avatar" class="user-avatar-img" src="" alt="Avatar" />
+                    <img id="sidebar-user-avatar" class="user-avatar-img" src="/static/default-user.svg" alt="User avatar" />
                     <div class="user-meta">
                         <span id="sidebar-user-name" class="user-name-text">Guest User</span>
-                        <span id="sidebar-user-email" class="user-email-text">guest@willa.ai</span>
+                        <span id="sidebar-user-email" class="user-email-text">guest@ripe.ai</span>
                     </div>
                 </div>
 
@@ -283,7 +268,7 @@
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
-                        <span>Settings</span>
+                        <span>Models</span>
                     </button>
                     <button id="sign-out-btn" class="sidebar-action-btn btn-signout-nav" title="Sign Out">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -309,18 +294,25 @@
                             <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <div id="header-model-badge" class="model-selector-chip" title="Active Model">
-                        <span>Claude 3.7 Sonnet</span>
+                    <div id="header-model-badge" class="model-selector-chip" title="Click to change engine/model">
+                        <span>Gemini (3.8 Flash)</span>
                     </div>
+                    <button id="terminal-toggle-btn" class="terminal-toggle-chip" title="Toggle System Terminal Drawer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                        <span>Terminal Console</span>
+                    </button>
                 </div>
 
                 <div class="header-right">
                     <div id="header-status" class="status-pill status-ok">
                         <span class="dot-green"></span>
-                        <span>Online</span>
+                        <span id="header-status-text">Gemini 3.8 Flash (High) ready</span>
                     </div>
                     <button id="theme-toggle-btn" class="icon-btn-ghost" title="Toggle Theme">
-                        🌓
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5a8.5 8.5 0 1 0 12 12Z"/><path d="M16 3v4M14 5h4"/></svg>
                     </button>
                 </div>
             </header>
@@ -332,7 +324,40 @@
                 </div>
             </div>
 
-            <!-- Floating Input Arena (Claude / ChatGPT style) -->
+            <!-- ==================== SYSTEM TERMINAL DRAWER ==================== -->
+            <div id="terminal-drawer" class="terminal-drawer hidden">
+                <div class="terminal-drawer-header">
+                    <div class="terminal-title">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                        <span class="terminal-heading">System Terminal — <span id="term-cwd-display">~</span></span>
+                    </div>
+                    <div class="terminal-controls">
+                        <button id="term-clear-btn" class="term-ctrl-btn" title="Clear Terminal">Clear</button>
+                        <button id="term-close-btn" class="term-ctrl-btn" title="Close Terminal">✕</button>
+                    </div>
+                </div>
+                <div class="terminal-quick-bar">
+                    <span class="term-quick-label">Quick Commands:</span>
+                    <button class="term-chip" data-cmd="uname -a">uname -a</button>
+                    <button class="term-chip" data-cmd="free -h">free -h</button>
+                    <button class="term-chip" data-cmd="df -h">df -h</button>
+                    <button class="term-chip" data-cmd="ps aux | head -n 10">ps top 10</button>
+                    <button class="term-chip" data-cmd="codex --version">codex --version</button>
+                    <button class="term-chip" data-cmd="git status">git status</button>
+                </div>
+                <div id="terminal-output" class="terminal-output">
+                    <div class="terminal-welcome">RipeAI Embedded System Terminal [Linux bash]<br>Type any command or use the quick buttons above.</div>
+                </div>
+                <form id="terminal-input-form" class="terminal-input-row">
+                    <span class="term-prompt">ripeai$</span>
+                    <input type="text" id="terminal-cmd-input" class="term-input" placeholder="Type a shell command (e.g. ls -la, git status)..." autocomplete="off" spellcheck="false" />
+                    <button type="submit" class="term-run-btn">Run</button>
+                </form>
+            </div>
+
+            <!-- Floating Input Arena -->
             <div class="input-arena">
                 <div class="input-container">
                     <div id="attachment-bar" class="attachment-preview-bar hidden"></div>
@@ -344,7 +369,7 @@
                             </svg>
                         </button>
                         <textarea id="user-input" class="input-textarea"
-                            placeholder="Message WillaAI or request a terminal action..." rows="1"></textarea>
+                            placeholder="Message RipeAI, run a terminal command, or ask anything..." rows="1"></textarea>
                         <button id="stop-btn" class="btn-stop-circle hidden" title="Stop generating">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                 <rect x="4" y="4" width="16" height="16" rx="2"></rect>
@@ -359,13 +384,13 @@
                     </div>
                 </div>
                 <div class="input-footer-note">
-                    WillaAI can run shell commands on your system. Always review important actions.
+                    RipeAI works with your local system tools. Prefix with $ for direct shell execution.
                 </div>
             </div>
         </main>
     </div>
 
-    <script src="/static/app.js?v=7"></script>
+    <script src="/static/app.js?v=28"></script>
 </body>
 
 </html>
