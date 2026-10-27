@@ -1,0 +1,27 @@
+{
+  "name": "ripeai-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "Text-based AI Assistant integrated directly into WhatsApp via WhatsApp Web emulation",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node -e \"console.log('Validating WhatsApp Bot configuration and modules...'); require('./src/config/config'); require('./src/utils/formatter'); require('./src/utils/logger'); console.log('All modules loaded successfully!');\""
+  },
+  "keywords": [
+    "whatsapp",
+    "whatsapp-web.js",
+    "openai",
+    "ai-assistant",
+    "chatbot"
+  ],
+  "author": "RipeAI",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "openai": "^4.85.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}
