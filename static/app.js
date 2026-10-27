@@ -104,6 +104,16 @@ const els = {
     waLinkBtn: $('wa-link-btn'),
     waInstructions: $('wa-instructions'),
 
+    sidebarWaBadge: $('sidebar-wa-badge'),
+    sidebarWaDot: $('sidebar-wa-dot'),
+    sidebarWaStatusText: $('sidebar-wa-status-text'),
+    sidebarWaInputGroup: $('sidebar-wa-input-group'),
+    sidebarWaPhoneInput: $('sidebar-wa-phone-input'),
+    sidebarWaLinkBtn: $('sidebar-wa-link-btn'),
+    sidebarWaQrBox: $('sidebar-wa-qr-box'),
+    sidebarWaQrImg: $('sidebar-wa-qr-img'),
+    sidebarWaUnlinkBtn: $('sidebar-wa-unlink-btn'),
+
     sidebarModel: $('sidebar-model'),
     headerModelBadge: $('header-model-badge'),
     headerStatusText: $('header-status-text'),
@@ -528,41 +538,138 @@ function resetSettings() {
 }
 
 /* =============================================
-   WHATSAPP STATUS
+   WHATSAPP STATUS & SIDEBAR CONTROLS
    ============================================= */
 async function pollWhatsAppStatus() {
     try {
         const res = await fetch('/api/whatsapp/status');
         if (!res.ok) return;
         const data = await res.json();
-        if (data.status === 'connected') {
-            els.waStatusText.textContent = 'Linked & ready';
-            els.waStatusText.style.color = 'var(--accent-primary)';
-            els.waQrImg.classList.add('hidden');
-            els.waInstructions.classList.add('hidden');
-            els.waLinkBtn.classList.add('hidden');
-        } else if (data.status === 'qr' && data.qr_base64) {
-            els.waStatusText.textContent = 'Scan QR code in WhatsApp Linked Devices';
-            els.waQrImg.src = `data:image/png;base64,${data.qr_base64}`;
-            els.waQrImg.classList.remove('hidden');
-            els.waInstructions.classList.remove('hidden');
-            els.waLinkBtn.classList.add('hidden');
-        } else {
-            els.waStatusText.textContent = 'WhatsApp not linked';
-            els.waLinkBtn.classList.remove('hidden');
+        
+        const qrSrc = data.qr_base64 
+            ? (data.qr_base64.startsWith('data:') ? data.qr_base64 : `data:image/png;base64,${data.qr_base64}`)
+            : '';
+
+        // 1. Update Settings Modal (if open)
+        if (els.waStatusText) {
+            if (data.status === 'connected') {
+                els.waStatusText.textContent = `Linked to ${data.owner_number ? '+' + data.owner_number : 'Device'}`;
+                els.waStatusText.style.color = '#10b981';
+                els.waQrImg?.classList.add('hidden');
+                els.waInstructions?.classList.add('hidden');
+                els.waLinkBtn?.classList.add('hidden');
+            } else if (data.status === 'qr' && qrSrc) {
+                els.waStatusText.textContent = 'Scan QR code in WhatsApp Linked Devices';
+                els.waStatusText.style.color = '#f59e0b';
+                if (els.waQrImg) {
+                    els.waQrImg.src = qrSrc;
+                    els.waQrImg.classList.remove('hidden');
+                }
+                els.waInstructions?.classList.remove('hidden');
+                els.waLinkBtn?.classList.add('hidden');
+            } else {
+                els.waStatusText.textContent = 'WhatsApp not linked';
+                els.waStatusText.style.color = 'var(--text-secondary)';
+                els.waQrImg?.classList.add('hidden');
+                els.waInstructions?.classList.add('hidden');
+                els.waLinkBtn?.classList.remove('hidden');
+            }
+        }
+
+        // 2. Update Sidebar Controls
+        if (els.sidebarWaBadge) {
+            if (data.status === 'connected') {
+                if (els.sidebarWaDot) els.sidebarWaDot.style.background = '#10b981';
+                if (els.sidebarWaStatusText) els.sidebarWaStatusText.textContent = data.owner_number ? `+${data.owner_number}` : 'Connected';
+                els.sidebarWaBadge.style.color = '#10b981';
+                els.sidebarWaBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+
+                els.sidebarWaInputGroup?.classList.add('hidden');
+                els.sidebarWaQrBox?.classList.add('hidden');
+                els.sidebarWaUnlinkBtn?.classList.remove('hidden');
+            } else if (data.status === 'qr' && qrSrc) {
+                if (els.sidebarWaDot) els.sidebarWaDot.style.background = '#f59e0b';
+                if (els.sidebarWaStatusText) els.sidebarWaStatusText.textContent = 'Scan QR Code';
+                els.sidebarWaBadge.style.color = '#f59e0b';
+                els.sidebarWaBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+
+                if (els.sidebarWaQrImg) els.sidebarWaQrImg.src = qrSrc;
+                els.sidebarWaQrBox?.classList.remove('hidden');
+                els.sidebarWaInputGroup?.classList.add('hidden');
+                els.sidebarWaUnlinkBtn?.classList.add('hidden');
+            } else if (data.status === 'starting') {
+                if (els.sidebarWaDot) els.sidebarWaDot.style.background = '#3b82f6';
+                if (els.sidebarWaStatusText) els.sidebarWaStatusText.textContent = 'Initializing...';
+                els.sidebarWaBadge.style.color = '#3b82f6';
+                els.sidebarWaBadge.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+
+                els.sidebarWaQrBox?.classList.add('hidden');
+                els.sidebarWaInputGroup?.classList.remove('hidden');
+                els.sidebarWaUnlinkBtn?.classList.add('hidden');
+            } else {
+                if (els.sidebarWaDot) els.sidebarWaDot.style.background = 'var(--text-muted)';
+                if (els.sidebarWaStatusText) els.sidebarWaStatusText.textContent = 'Disconnected';
+                els.sidebarWaBadge.style.color = 'var(--text-secondary)';
+                els.sidebarWaBadge.style.borderColor = 'var(--border-medium)';
+
+                els.sidebarWaQrBox?.classList.add('hidden');
+                els.sidebarWaInputGroup?.classList.remove('hidden');
+                els.sidebarWaUnlinkBtn?.classList.add('hidden');
+
+                if (data.owner_number && els.sidebarWaPhoneInput && !els.sidebarWaPhoneInput.value) {
+                    els.sidebarWaPhoneInput.value = data.owner_number;
+                }
+            }
         }
     } catch (_) {}
 }
 
-els.waLinkBtn?.addEventListener('click', async () => {
-    els.waLinkBtn.classList.add('hidden');
-    els.waStatusText.textContent = 'Starting WhatsApp service...';
+async function handleStartWhatsApp(phone) {
+    if (els.sidebarWaStatusText) els.sidebarWaStatusText.textContent = 'Connecting...';
+    if (els.waStatusText) els.waStatusText.textContent = 'Starting WhatsApp service...';
+    
     try {
-        await fetch('/api/whatsapp/start', { method: 'POST' });
+        const body = phone ? { owner_number: phone } : {};
+        await fetch('/api/whatsapp/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        showToast('WhatsApp service requested.');
         pollWhatsAppStatus();
     } catch (e) {
+        showToast('Failed to start WhatsApp bridge.');
         console.error(e);
     }
+}
+
+async function handleDisconnectWhatsApp() {
+    try {
+        await fetch('/api/whatsapp/disconnect', { method: 'POST' });
+        showToast('WhatsApp disconnected.');
+        pollWhatsAppStatus();
+    } catch (e) {
+        showToast('Failed to disconnect WhatsApp.');
+        console.error(e);
+    }
+}
+
+els.sidebarWaLinkBtn?.addEventListener('click', () => {
+    const rawNumber = els.sidebarWaPhoneInput?.value?.trim() || '';
+    const cleanNumber = rawNumber.replace(/\D/g, '');
+    if (!cleanNumber) {
+        showToast('Please enter your WhatsApp phone number with country code (e.g. 919363936963).');
+        els.sidebarWaPhoneInput?.focus();
+        return;
+    }
+    handleStartWhatsApp(cleanNumber);
+});
+
+els.sidebarWaUnlinkBtn?.addEventListener('click', handleDisconnectWhatsApp);
+
+els.waLinkBtn?.addEventListener('click', () => {
+    const phone = els.sidebarWaPhoneInput?.value?.trim()?.replace(/\D/g, '') || '';
+    handleStartWhatsApp(phone);
 });
 
 /* =============================================

@@ -15,14 +15,7 @@ import segno
 import io
 import base64
 
-try:
-    from neonize.client import NewClient
-    from neonize.events import MessageEv, ConnectedEv, QREv
-    NEONIZE_AVAILABLE = True
-except ImportError:
-    NewClient = None
-    MessageEv = ConnectedEv = QREv = None
-    NEONIZE_AVAILABLE = False
+# WhatsApp is integrated via Node.js whatsapp-web.js bridge service
 
 from dotenv import load_dotenv
 
@@ -497,116 +490,71 @@ async def clear_memories():
 
 
 # ==========================================
-# WhatsApp integration
+# WhatsApp integration (Node.js whatsapp-bot service bridge)
 # ==========================================
 
-wa_client = None
-wa_status = "disconnected"
-wa_qr_base64 = ""
-whatsapp_history = []
+WA_BRIDGE_URL = "http://127.0.0.1:8008"
+wa_process = None
 
-async def wa_agent_loop(chat, original_message, text: str):
-    global whatsapp_history
-    if text.strip().lower() in ["clear", "reset"]:
-        whatsapp_history = []
-        wa_client.reply_message(chat, "🧹 Chat history cleared.", original_message)
-        return
-
-    wa_client.reply_message(chat, "RipeAI is working on your request...", original_message)
-    whatsapp_history.append({"role": "user", "content": text})
-
-    cmd = ["agy", "--model", "gemini-3.8-flash-high", "--dangerously-skip-permissions", "--output-format", "stream-json", "-p", text]
+def ensure_whatsapp_service_running():
+    global wa_process
     try:
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            cwd=current_cwd
+        resp = httpx.get(f"{WA_BRIDGE_URL}/api/whatsapp/status", timeout=1.0)
+        if resp.status_code == 200:
+            return True
+    except Exception:
+        pass
+
+    bot_dir = os.path.join(PROJECT_DIR, "whatsapp-bot")
+    if os.path.isdir(bot_dir):
+        wa_process = subprocess.Popen(
+            ["node", "src/index.js"],
+            cwd=bot_dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
         )
-        full_resp = ""
-        while True:
-            line_bytes = await proc.stdout.readline()
-            if not line_bytes:
-                break
-            line = line_bytes.decode("utf-8", errors="replace").strip()
-            if not line:
-                continue
-            try:
-                data = json.loads(line)
-                if data.get("event") == "result":
-                    full_resp = data.get("result", {}).get("response", "")
-            except Exception:
-                pass
-        await proc.wait()
-        if not full_resp:
-            full_resp = "Task completed successfully."
-    except Exception as e:
-        full_resp = f"Error running CLI: {str(e)}"
+    return True
 
-    wa_client.reply_message(chat, full_resp, original_message)
-    whatsapp_history.append({"role": "assistant", "content": full_resp})
-
-def start_whatsapp_bot():
-    global wa_client, wa_status, wa_qr_base64
-    if not NEONIZE_AVAILABLE:
-        wa_status = "unavailable"
-        return
-    if wa_client is not None:
-        return
-    wa_status = "starting"
-    wa_client = NewClient("ripe_ai_whatsapp.sqlite3")
-
-    @wa_client.event(ConnectedEv)
-    def on_connected(_: NewClient, __: ConnectedEv):
-        global wa_status
-        wa_status = "connected"
-
-    @wa_client.event(QREv)
-    def on_qr(_: NewClient, event: QREv):
-        global wa_status, wa_qr_base64
-        codes = list(event.Codes)
-        if not codes:
-            return
-        wa_status = "qr"
-        qr = segno.make(codes[0])
-        out = io.BytesIO()
-        qr.save(out, kind="png", scale=5)
-        wa_qr_base64 = base64.b64encode(out.getvalue()).decode()
-
-    @wa_client.event(MessageEv)
-    def on_message(client: NewClient, message: MessageEv):
-        chat = message.Info.MessageSource.Chat
-        text = message.Message.conversation
-        extended_text = message.Message.extendedTextMessage.text
-        body = text or extended_text
-        if not body:
-            return
-        
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(wa_agent_loop(chat, message, body))
-        loop.close()
-
-    try:
-        wa_client.connect()
-    except Exception as e:
-        wa_status = "error"
-
-@app.post("/api/whatsapp/start")
-async def api_wa_start():
-    if wa_status == "disconnected" or wa_status == "error":
-        threading.Thread(target=start_whatsapp_bot, daemon=True).start()
-    return JSONResponse({"status": "starting"})
+class WhatsAppStartPayload(BaseModel):
+    owner_number: Optional[str] = ""
 
 @app.get("/api/whatsapp/status")
 async def api_wa_status():
-    return JSONResponse({
-        "status": wa_status,
-        "qr_base64": wa_qr_base64 if wa_status == "qr" else ""
-    })
+    ensure_whatsapp_service_running()
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{WA_BRIDGE_URL}/api/whatsapp/status")
+            if resp.status_code == 200:
+                return JSONResponse(resp.json())
+    except Exception:
+        pass
+    return JSONResponse({"status": "starting", "qr_base64": "", "owner_number": ""})
 
-if os.path.exists("ripe_ai_whatsapp.sqlite3") or os.path.exists("action_ai_whatsapp.sqlite3"):
-    threading.Thread(target=start_whatsapp_bot, daemon=True).start()
+@app.post("/api/whatsapp/start")
+async def api_wa_start(payload: Optional[WhatsAppStartPayload] = None):
+    ensure_whatsapp_service_running()
+    data = {}
+    if payload and payload.owner_number:
+        data["owner_number"] = payload.owner_number
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(f"{WA_BRIDGE_URL}/api/whatsapp/start", json=data)
+            if resp.status_code == 200:
+                return JSONResponse(resp.json())
+    except Exception:
+        pass
+    return JSONResponse({"status": "starting", "owner_number": data.get("owner_number", "")})
+
+@app.post("/api/whatsapp/disconnect")
+async def api_wa_disconnect():
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(f"{WA_BRIDGE_URL}/api/whatsapp/disconnect")
+            if resp.status_code == 200:
+                return JSONResponse(resp.json())
+    except Exception:
+        pass
+    return JSONResponse({"status": "disconnected"})
 
 class ConfigPayload(BaseModel):
     action_ai_key: Optional[str] = ""

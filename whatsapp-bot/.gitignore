@@ -1,0 +1,17 @@
+# WhatsApp authentication session data (contains sensitive session tokens)
+.wweb_auth/
+.wweb_cache/
+
+# Environment credentials
+.env
+.env.local
+
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System & Editor files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,11 @@
+{
+  "name": "ripeai",
+  "version": "1.0.0",
+  "description": "RipeAI System Terminal & WhatsApp Remote Agent",
+  "scripts": {
+    "start": "npm start --prefix whatsapp-bot",
+    "whatsapp": "npm start --prefix whatsapp-bot",
+    "dev": "npm run dev --prefix whatsapp-bot",
+    "test": "npm test --prefix whatsapp-bot"
+  }
+}

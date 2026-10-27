@@ -7,3 +7,6 @@ memories.json
 action_ai_whatsapp.sqlite3
 server.log
 .DS_Store
+.wweb_auth/
+whatsapp-bot/.wweb_auth/
+whatsapp-bot/node_modules/
