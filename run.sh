@@ -11,6 +11,7 @@ cd "$PROJECT_ROOT"
 # Default configuration
 HOST="${RIPEAI_HOST:-127.0.0.1}"
 PORT="${RIPEAI_PORT:-8000}"
+VENV_PATH="${VIRTUAL_ENV:-$PROJECT_ROOT/venv}"
 RELOAD="--reload"
 CLEAN_LOCKS=true
 
@@ -23,10 +24,15 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --host <ip>       Bind host address (default: 127.0.0.1)"
             echo "  --port <port>     Bind port number (default: 8000)"
+            echo "  --venv <path>     Path to custom virtual environment (default: ./venv or \$VIRTUAL_ENV)"
             echo "  --no-reload       Disable auto-reloading on code changes"
             echo "  --clean           Force kill stale background processes & remove browser locks"
             echo "  -h, --help        Show this help message"
             exit 0
+            ;;
+        --venv)
+            VENV_PATH="$2"
+            shift 2
             ;;
         --host)
             HOST="$2"
@@ -77,7 +83,10 @@ trap cleanup SIGINT SIGTERM EXIT
 PYTHON_BIN=""
 UVICORN_BIN=""
 
-if [[ -x "$PROJECT_ROOT/venv/bin/python" ]]; then
+if [[ -x "$VENV_PATH/bin/python" ]]; then
+    PYTHON_BIN="$VENV_PATH/bin/python"
+    UVICORN_BIN="$VENV_PATH/bin/uvicorn"
+elif [[ -x "$PROJECT_ROOT/venv/bin/python" ]]; then
     PYTHON_BIN="$PROJECT_ROOT/venv/bin/python"
     UVICORN_BIN="$PROJECT_ROOT/venv/bin/uvicorn"
 elif command -v python3 >/dev/null 2>&1; then
