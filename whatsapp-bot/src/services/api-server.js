@@ -8,7 +8,8 @@ const {
   initializeWhatsAppClient, 
   stopWhatsAppClient,
   getClient,
-  isClientReady
+  isClientReady,
+  recordBotSentMessageId
 } = require('./whatsapp');
 const logger = require('../utils/logger');
 
@@ -108,7 +109,10 @@ function startApiServer() {
         const jid = `${config.owner.phoneNumber}@c.us`;
         const text = payload.message || '';
         if (text) {
-          await client.sendMessage(jid, text);
+          const sent = await client.sendMessage(jid, text);
+          if (sent?.id?._serialized) {
+            recordBotSentMessageId(sent.id._serialized);
+          }
           logger.chat('OUT', config.owner.phoneNumber, text);
         }
         return sendJson(res, 200, { success: true });

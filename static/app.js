@@ -215,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pollWhatsAppStatus();
     setInterval(pollWhatsAppStatus, 3000);
     initSSEListener();
+    loadServerChatHistory();
 
     if (STATE.user) {
         updateUserProfileUI();
@@ -1172,6 +1173,20 @@ function addUserMessage(text, options = {}) {
     scrollBottom();
 }
 
+function addAiMessage(text) {
+    hideEmptyHero();
+    const div = document.createElement('div');
+    div.className = 'message ai-message';
+    div.innerHTML = `
+        <div class="msg-avatar"><img src="/static/ripeai-mark.svg" alt=""></div>
+        <div class="msg-content-wrap">
+            <div class="msg-bubble">${renderMarkdown(text)}</div>
+        </div>
+    `;
+    els.messages.appendChild(div);
+    scrollBottom();
+}
+
 let activeAiBubble = null;
 
 function createStreamingAiMessage() {
@@ -1434,6 +1449,9 @@ async function sendMessage() {
     addUserMessage(text);
     STATE.history.push({ role: 'user', content: fullText });
 
+    // Two-way sync: Notify WhatsApp owner immediately that a prompt was sent from Web UI
+    notifyWhatsAppOwner(`💻 *[Web Terminal Prompt]:*\n${text}`);
+
     abortController = new AbortController();
     setSending(true);
     showThinking(`Running ${STATE.modelName}...`);
@@ -1515,8 +1533,8 @@ async function sendMessage() {
 
         if (streamedContent) {
             STATE.history.push({ role: 'assistant', content: streamedContent });
-            // Two-way sync: mirror web UI prompt and AI output to owner's WhatsApp!
-            syncWebPromptToWhatsApp(text, streamedContent);
+            // Two-way sync: mirror completed AI response to owner's WhatsApp!
+            notifyWhatsAppOwner(`🤖 *[AI Response]:*\n${streamedContent}`);
         }
 
     } catch (err) {
@@ -1534,19 +1552,18 @@ async function sendMessage() {
 }
 
 /* =============================================
-   WHATSAPP REMOTE REAL-TIME PROMPT DISPATCHER
+   WHATSAPP TWO-WAY REMOTE SYNC & SSE EVENT LISTENER
    ============================================= */
-const remotePromptQueue = [];
-let isProcessingRemotePrompt = false;
 
-async function syncWebPromptToWhatsApp(userPrompt, aiResponse) {
-    if (!userPrompt || !aiResponse) return;
+let remoteStreamedContent = '';
+
+async function notifyWhatsAppOwner(msg) {
+    if (!msg) return;
     try {
-        const payloadText = `💻 *[Web Terminal Prompt]:*\n${userPrompt}\n\n🤖 *[AI Response]:*\n${aiResponse}`;
         await fetch('/api/whatsapp/notify-owner', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: payloadText })
+            body: JSON.stringify({ message: msg })
         });
     } catch (_) {}
 }
@@ -1561,10 +1578,7 @@ function initSSEListener() {
     es.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
-            if (data.type === 'whatsapp_prompt') {
-                console.log('[RipeAI] Received incoming WhatsApp prompt:', data);
-                queueIncomingWhatsAppPrompt(data);
-            }
+            handleLiveServerEvent(data);
         } catch (_) {}
     };
 
@@ -1573,180 +1587,120 @@ function initSSEListener() {
     };
 }
 
-function queueIncomingWhatsAppPrompt(data) {
-    remotePromptQueue.push(data);
-    processRemotePromptQueue();
-}
+function handleLiveServerEvent(data) {
+    if (!data || !data.type) return;
 
-async function processRemotePromptQueue() {
-    if (isProcessingRemotePrompt || remotePromptQueue.length === 0) return;
-
-    // If standard user prompt is currently executing, wait a brief moment
-    if (els.sendBtn && els.sendBtn.classList.contains('hidden')) {
-        setTimeout(processRemotePromptQueue, 500);
+    if (data.type === 'user_message') {
+        hideEmptyHero();
+        // Visual indicator in input box if from WhatsApp
+        if (data.from_whatsapp && els.userInput) {
+            els.userInput.value = data.content;
+            setTimeout(() => {
+                if (els.userInput && els.userInput.value === data.content) {
+                    els.userInput.value = '';
+                    els.userInput.style.height = 'auto';
+                }
+            }, 600);
+        }
+        addUserMessage(data.content, {
+            fromWhatsApp: data.from_whatsapp,
+            sender: data.sender
+        });
+        STATE.history.push({ role: 'user', content: data.content });
+        remoteStreamedContent = '';
+        activeAiBubble = null;
+        showThinking(`Running ${STATE.modelName || 'Gemini 3.8 Flash (High)'} (from WhatsApp DM)...`);
+        scrollBottom();
         return;
     }
 
-    isProcessingRemotePrompt = true;
-    const item = remotePromptQueue.shift();
+    if (data.type === 'status') {
+        showThinking(data.message || 'Executing your request...');
+        return;
+    }
 
-    try {
-        await executeIncomingPrompt(item.prompt, item.sender, item.id);
-    } catch (err) {
-        console.error('Error executing incoming WhatsApp prompt:', err);
-        try {
-            await fetch('/api/whatsapp/resolve-prompt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: item.id,
-                    response: `⚠️ Error executing prompt on machine: ${err.message}`
-                })
-            });
-        } catch (_) {}
-    } finally {
-        isProcessingRemotePrompt = false;
-        if (remotePromptQueue.length > 0) {
-            setTimeout(processRemotePromptQueue, 300);
+    if (data.type === 'delta') {
+        removeThinking();
+        remoteStreamedContent = (remoteStreamedContent || '') + (data.content || '');
+        updateStreamingAiMessage(remoteStreamedContent);
+        scrollBottom();
+        return;
+    }
+
+    if (data.type === 'action') {
+        removeThinking();
+        if (STATE.safeMode && DANGEROUS_PATTERNS.some(p => p.test(data.command))) {
+            addErrorMessage(`Safe Mode blocked dangerous action: \`${data.command}\``);
+            return;
         }
+        addActionMessage(data.command, data.tool);
+        scrollBottom();
+        return;
+    }
+
+    if (data.type === 'action_result') {
+        if (STATE.showOutput) {
+            addResultMessage(data.output);
+        }
+        showThinking('Processing output...');
+        scrollBottom();
+        return;
+    }
+
+    if (data.type === 'memories_saved') {
+        addMemorySavedMsg(data.memories);
+        return;
+    }
+
+    if (data.type === 'final') {
+        removeThinking();
+        const finalTxt = data.content || remoteStreamedContent || '';
+        if (finalTxt && !remoteStreamedContent) {
+            updateStreamingAiMessage(finalTxt);
+        }
+        if (finalTxt) {
+            STATE.history.push({ role: 'assistant', content: finalTxt });
+        }
+        remoteStreamedContent = '';
+        activeAiBubble = null;
+        scrollBottom();
+        return;
+    }
+
+    if (data.type === 'error') {
+        removeThinking();
+        addErrorMessage(data.message || 'Error occurred during execution.');
+        remoteStreamedContent = '';
+        activeAiBubble = null;
+        scrollBottom();
+        return;
     }
 }
 
-async function executeIncomingPrompt(text, sender, messageId) {
-    if (!text) return;
-
-    // Provide visual typing/prompt preview in input box before executing
-    if (els.userInput) {
-        els.userInput.value = text;
-        setTimeout(() => {
-            if (els.userInput && els.userInput.value === text) {
-                els.userInput.value = '';
-                els.userInput.style.height = 'auto';
-            }
-        }, 800);
-    }
-
-    // Add user message to chat stream with WhatsApp badge
-    hideEmptyHero();
-    addUserMessage(text, { fromWhatsApp: true, sender: sender });
-    STATE.history.push({ role: 'user', content: text });
-
-    abortController = new AbortController();
-    setSending(true);
-    showThinking(`Running ${STATE.modelName} (from WhatsApp DM)...`);
-    activeAiBubble = null;
-
-    let streamedContent = '';
-
+async function loadServerChatHistory() {
     try {
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                messages: STATE.history,
-                engine: STATE.engine,
-                model: STATE.modelId
-            }),
-            signal: abortController.signal
-        });
+        const res = await fetch('/api/chat/history');
+        if (!res.ok) return;
+        const history = await res.json();
+        if (!Array.isArray(history) || history.length === 0) return;
 
-        if (!response.ok) {
-            let errMsg = `Server error (${response.status}).`;
-            try {
-                const data = await response.json();
-                errMsg = data.detail || errMsg;
-            } catch (_) {}
-            removeThinking();
-            addErrorMessage(errMsg);
-            setSending(false);
+        hideEmptyHero();
+        STATE.history = [];
 
-            await fetch('/api/whatsapp/resolve-prompt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: messageId,
-                    response: `⚠️ Error: ${errMsg}`
-                })
-            });
-            return;
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-
-            const lines = buffer.split('\n');
-            buffer = lines.pop();
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-                let data;
-                try { data = JSON.parse(line); } catch (_) { continue; }
-
-                if (data.type === 'status') {
-                    showThinking(data.message || 'Executing your request...');
-                } else if (data.type === 'delta') {
-                    removeThinking();
-                    streamedContent += data.content;
-                    updateStreamingAiMessage(streamedContent);
-                } else if (data.type === 'action') {
-                    removeThinking();
-                    if (STATE.safeMode && DANGEROUS_PATTERNS.some(p => p.test(data.command))) {
-                        addErrorMessage(`Safe Mode blocked dangerous action: \`${data.command}\``);
-                        break;
-                    }
-                    addActionMessage(data.command, data.tool);
-                } else if (data.type === 'action_result') {
-                    if (STATE.showOutput) addResultMessage(data.output);
-                    showThinking('Processing output...');
-                } else if (data.type === 'memories_saved') {
-                    addMemorySavedMsg(data.memories);
-                } else if (data.type === 'final') {
-                    removeThinking();
-                    if (!streamedContent) {
-                        updateStreamingAiMessage(data.content);
-                        streamedContent = data.content;
-                    }
-                } else if (data.type === 'error') {
-                    removeThinking();
-                    addErrorMessage(data.message);
-                }
+        for (const item of history) {
+            if (item.role === 'user') {
+                addUserMessage(item.content, {
+                    fromWhatsApp: item.from_whatsapp,
+                    sender: item.sender
+                });
+                STATE.history.push({ role: 'user', content: item.content });
+            } else if (item.role === 'assistant') {
+                addAiMessage(item.content);
+                STATE.history.push({ role: 'assistant', content: item.content });
             }
         }
-
-        if (streamedContent) {
-            STATE.history.push({ role: 'assistant', content: streamedContent });
-        }
-
-        // Deliver final generated response back to the WhatsApp conversation
-        await fetch('/api/whatsapp/resolve-prompt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: messageId,
-                response: streamedContent || "Task completed."
-            })
-        });
-
-    } catch (err) {
-        removeThinking();
-        addErrorMessage(`Execution error: ${err.message}.`);
-        await fetch('/api/whatsapp/resolve-prompt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: messageId,
-                response: `⚠️ Error executing request: ${err.message}`
-            })
-        });
-    } finally {
-        abortController = null;
-        setSending(false);
         scrollBottom();
+    } catch (e) {
+        console.error('Failed to load chat history:', e);
     }
 }

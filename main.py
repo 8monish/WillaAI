@@ -481,6 +481,29 @@ async def get_cli_status():
         "no_api_key_required": True
     })
 
+conversation_history: List[Dict] = []
+
+def add_to_conversation_history(role: str, content: str, from_whatsapp: bool = False, sender: str = ""):
+    item = {
+        "role": role,
+        "content": content,
+        "from_whatsapp": from_whatsapp,
+        "sender": sender,
+    }
+    conversation_history.append(item)
+    if len(conversation_history) > 60:
+        conversation_history.pop(0)
+    return item
+
+async def broadcast_event(data: dict):
+    if not chat_event_queues:
+        return
+    for q in list(chat_event_queues):
+        try:
+            await q.put(data)
+        except Exception:
+            pass
+
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
     if not req.messages:
@@ -488,6 +511,28 @@ async def chat_endpoint(req: ChatRequest):
 
     engine = (req.engine or req.provider or "antigravity").lower()
     last_msg = req.messages[-1].get("content", "").strip()
+
+    # Track in shared conversation history
+    add_to_conversation_history(role="user", content=last_msg, from_whatsapp=False, sender="Web")
+
+    async def stream_and_record(gen):
+        accumulated = ""
+        try:
+            async for chunk in gen:
+                try:
+                    data = json.loads(chunk.strip())
+                    if data.get("type") == "final":
+                        final_text = data.get("content", "")
+                        if final_text:
+                            accumulated = final_text
+                    elif data.get("type") == "delta":
+                        accumulated += data.get("content", "")
+                except Exception:
+                    pass
+                yield chunk
+        finally:
+            if accumulated:
+                add_to_conversation_history(role="assistant", content=accumulated, from_whatsapp=False, sender="RipeAI")
 
     # If user explicitly starts with $ or ! run directly in terminal
     if last_msg.startswith("$ ") or last_msg.startswith("! "):
@@ -497,23 +542,23 @@ async def chat_endpoint(req: ChatRequest):
             out = execute_command(raw_cmd)
             yield json.dumps({"type": "action_result", "output": out}) + "\n"
             yield json.dumps({"type": "final", "content": f"Executed:\n```bash\n{out}\n```"}) + "\n"
-        return StreamingResponse(run_direct(), media_type="application/x-ndjson")
+        return StreamingResponse(stream_and_record(run_direct()), media_type="application/x-ndjson")
 
     prompt = build_cli_prompt(req.messages)
 
     if engine in ["codex"]:
-        return StreamingResponse(run_codex_stream(prompt), media_type="application/x-ndjson")
+        return StreamingResponse(stream_and_record(run_codex_stream(prompt)), media_type="application/x-ndjson")
     elif engine in ["bash", "terminal"]:
         async def run_shell_mode():
             yield json.dumps({"type": "action", "command": last_msg}) + "\n"
             out = execute_command(last_msg)
             yield json.dumps({"type": "action_result", "output": out}) + "\n"
             yield json.dumps({"type": "final", "content": out}) + "\n"
-        return StreamingResponse(run_shell_mode(), media_type="application/x-ndjson")
+        return StreamingResponse(stream_and_record(run_shell_mode()), media_type="application/x-ndjson")
     else:
         # Default local model
         selected_model = req.model or "gemini-3.8-flash-high"
-        return StreamingResponse(run_gemini_stream(prompt, selected_model), media_type="application/x-ndjson")
+        return StreamingResponse(stream_and_record(run_gemini_stream(prompt, selected_model)), media_type="application/x-ndjson")
 
 
 class TerminalExecRequest(BaseModel):
@@ -696,32 +741,18 @@ async def api_wa_notify_owner(payload: WhatsAppNotifyPayload):
 # Real-Time Main Page SSE Event Stream & Remote Prompt Execution
 # ==========================================
 
-conversation_history: List[Dict] = []
-
-def add_to_conversation_history(role: str, content: str, from_whatsapp: bool = False, sender: str = ""):
-    item = {
-        "role": role,
-        "content": content,
-        "from_whatsapp": from_whatsapp,
-        "sender": sender,
-    }
-    conversation_history.append(item)
-    if len(conversation_history) > 60:
-        conversation_history.pop(0)
-    return item
+@app.on_event("shutdown")
+async def on_shutdown():
+    for q in list(chat_event_queues):
+        try:
+            await q.put(None)
+        except Exception:
+            pass
+    chat_event_queues.clear()
 
 @app.get("/api/chat/history")
 async def get_chat_history():
     return JSONResponse(conversation_history)
-
-async def broadcast_event(data: dict):
-    if not chat_event_queues:
-        return
-    for q in list(chat_event_queues):
-        try:
-            await q.put(data)
-        except Exception:
-            pass
 
 @app.get("/api/chat/events")
 async def chat_events_stream(request: Request):
@@ -735,10 +766,16 @@ async def chat_events_stream(request: Request):
                 if await request.is_disconnected():
                     break
                 try:
-                    msg = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    msg = await asyncio.wait_for(queue.get(), timeout=2.0)
+                    if msg is None:
+                        break
                     yield f"data: {json.dumps(msg)}\n\n"
                 except asyncio.TimeoutError:
+                    if await request.is_disconnected():
+                        break
                     yield ": keepalive\n\n"
+        except (asyncio.CancelledError, GeneratorExit):
+            pass
         finally:
             chat_event_queues.discard(queue)
 
@@ -797,7 +834,9 @@ async def handle_whatsapp_incoming_prompt(req: WhatsAppPromptPayload):
                     parsed = json.loads(chunk.strip())
                     await broadcast_event(parsed)
                     if parsed.get("type") == "final":
-                        final_output = parsed.get("content", "")
+                        final_content = parsed.get("content", "")
+                        if final_content:
+                            final_output = final_content
                     elif parsed.get("type") == "delta":
                         final_output += parsed.get("content", "")
                 except Exception:
