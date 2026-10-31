@@ -284,11 +284,14 @@ function bindEvents() {
     });
 
     // New Chat
-    els.clearChatBtn?.addEventListener('click', () => {
-        if (STATE.history.length > 0 && confirm('Start a fresh conversation?')) {
+    els.clearChatBtn?.addEventListener('click', async () => {
+        if (confirm('Start a fresh conversation?')) {
             STATE.history = [];
             els.messages.innerHTML = '';
             renderEmptyHero();
+            try {
+                await fetch('/api/chat/clear', { method: 'POST' });
+            } catch (_) {}
             showToast('New conversation started');
         }
     });
@@ -746,15 +749,17 @@ async function pollWhatsAppStatus() {
             }
         }
 
+        const displayPhone = data.connected_number ? `+${data.connected_number}` : (data.owner_number ? `+${data.owner_number}` : '');
+
         // 2. Update WhatsApp Hub Page
         if (els.hubPhoneDisplay) {
-            els.hubPhoneDisplay.textContent = data.owner_number ? `+${data.owner_number}` : 'Not Configured';
+            els.hubPhoneDisplay.textContent = displayPhone || 'Not Configured';
         }
 
         // 3. Update Multi-Step Wizard
         if (els.wizardQrStatus) {
             if (data.status === 'connected') {
-                els.wizardQrStatus.textContent = `🟢 WhatsApp Connected & Active (${data.owner_number ? '+' + data.owner_number : 'Linked'})`;
+                els.wizardQrStatus.textContent = `🟢 WhatsApp Connected & Active (${displayPhone || 'Linked'})`;
                 els.wizardQrStatus.style.color = '#10b981';
                 els.wizardQrLoading?.classList.add('hidden');
                 els.wizardQrImg?.classList.add('hidden');
@@ -782,14 +787,14 @@ async function pollWhatsAppStatus() {
             }
         }
 
-        if (data.owner_number && els.wizardPhoneInput && !els.wizardPhoneInput.value) {
-            els.wizardPhoneInput.value = data.owner_number;
+        if ((data.connected_number || data.owner_number) && els.wizardPhoneInput && !els.wizardPhoneInput.value) {
+            els.wizardPhoneInput.value = data.connected_number || data.owner_number;
         }
 
         // 4. Update Settings Modal (if open)
         if (els.waStatusText) {
             if (data.status === 'connected') {
-                els.waStatusText.textContent = `Linked to ${data.owner_number ? '+' + data.owner_number : 'Device'}`;
+                els.waStatusText.textContent = `Linked to ${displayPhone || 'Device'}`;
                 els.waStatusText.style.color = '#10b981';
                 els.waQrImg?.classList.add('hidden');
                 els.waInstructions?.classList.add('hidden');
@@ -816,7 +821,7 @@ async function pollWhatsAppStatus() {
         if (els.sidebarWaBadge) {
             if (data.status === 'connected') {
                 if (els.sidebarWaDot) els.sidebarWaDot.style.background = '#10b981';
-                if (els.sidebarWaStatusText) els.sidebarWaStatusText.textContent = data.owner_number ? `+${data.owner_number}` : 'Connected';
+                if (els.sidebarWaStatusText) els.sidebarWaStatusText.textContent = displayPhone || 'Connected';
                 els.sidebarWaBadge.style.color = '#10b981';
                 els.sidebarWaBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
 
@@ -1587,10 +1592,26 @@ function initSSEListener() {
     };
 }
 
+const recentUiMessageKeys = new Set();
+
 function handleLiveServerEvent(data) {
     if (!data || !data.type) return;
 
+    if (data.type === 'clear_chat') {
+        STATE.history = [];
+        els.messages.innerHTML = '';
+        renderEmptyHero();
+        return;
+    }
+
     if (data.type === 'user_message') {
+        const dedupeKey = `${data.id || ''}:${data.sender || ''}:${(data.content || '').trim()}`;
+        if (recentUiMessageKeys.has(dedupeKey)) {
+            return;
+        }
+        recentUiMessageKeys.add(dedupeKey);
+        setTimeout(() => recentUiMessageKeys.delete(dedupeKey), 8000);
+
         hideEmptyHero();
         // Visual indicator in input box if from WhatsApp
         if (data.from_whatsapp && els.userInput) {

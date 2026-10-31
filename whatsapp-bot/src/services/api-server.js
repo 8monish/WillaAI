@@ -1,6 +1,6 @@
 const http = require('http');
 const fs = require('fs');
-const { config, cleanPhoneNumber } = require('../config/config');
+const { config, cleanPhoneNumber, parseOwnerNumbers } = require('../config/config');
 const { 
   getWaStatus, 
   getQrBase64, 
@@ -9,7 +9,8 @@ const {
   stopWhatsAppClient,
   getClient,
   isClientReady,
-  recordBotSentMessageId
+  recordBotSentMessageId,
+  registerPendingBotMessage
 } = require('./whatsapp');
 const logger = require('../utils/logger');
 
@@ -57,10 +58,13 @@ function startApiServer() {
 
     // GET /api/whatsapp/status
     if (req.method === 'GET' && (url === '/api/whatsapp/status' || url === '/status')) {
+      const client = getClient();
+      const connectedNumber = cleanPhoneNumber(client?.info?.wid?.user);
       return sendJson(res, 200, {
         status: getWaStatus(),
         qr_base64: getQrBase64(),
         owner_number: config.owner.phoneNumber,
+        connected_number: connectedNumber,
         is_ready: getWaStatus() === 'connected',
       });
     }
@@ -77,22 +81,32 @@ function startApiServer() {
         initializeWhatsAppClient();
       }
 
+      const client = getClient();
+      const connectedNumber = cleanPhoneNumber(client?.info?.wid?.user);
+
       return sendJson(res, 200, {
         status: getWaStatus(),
         owner_number: config.owner.phoneNumber,
+        connected_number: connectedNumber,
       });
     }
 
     // POST /api/whatsapp/ping
     if (req.method === 'POST' && (url === '/api/whatsapp/ping' || url === '/ping')) {
       const client = getClient();
-      if (!client || !isClientReady() || !config.owner.phoneNumber) {
-        return sendJson(res, 400, { success: false, error: 'Client not connected or owner number not set.' });
+      if (!client || !isClientReady()) {
+        return sendJson(res, 400, { success: false, error: 'Client not connected.' });
+      }
+      const connectedNumber = cleanPhoneNumber(client?.info?.wid?.user);
+      const owners = parseOwnerNumbers(config.owner.phoneNumber);
+      const target = connectedNumber || owners[0];
+      if (!target) {
+        return sendJson(res, 400, { success: false, error: 'No phone number available to ping.' });
       }
       try {
-        const jid = `${config.owner.phoneNumber}@c.us`;
+        const jid = `${target}@c.us`;
         await client.sendMessage(jid, '🔔 *RipeAI Remote Ping:* Your machine is connected and actively listening for commands! 🚀');
-        return sendJson(res, 200, { success: true, message: `Ping sent to +${config.owner.phoneNumber}` });
+        return sendJson(res, 200, { success: true, message: `Ping sent to +${target}` });
       } catch (err) {
         return sendJson(res, 500, { success: false, error: err.message });
       }
@@ -102,18 +116,38 @@ function startApiServer() {
     if (req.method === 'POST' && (url === '/api/whatsapp/send-to-owner' || url === '/send-to-owner' || url === '/send')) {
       const payload = await parseJsonBody(req);
       const client = getClient();
-      if (!client || !isClientReady() || !config.owner.phoneNumber) {
-        return sendJson(res, 200, { success: false, reason: 'Client not ready or owner number not set' });
+      if (!client || !isClientReady()) {
+        return sendJson(res, 200, { success: false, reason: 'Client not ready' });
       }
+
+      const connectedNumber = cleanPhoneNumber(client?.info?.wid?.user);
+      const owners = parseOwnerNumbers(config.owner.phoneNumber);
+      const targets = new Set();
+      if (connectedNumber) targets.add(connectedNumber);
+      for (const num of owners) {
+        if (num) targets.add(num);
+      }
+
+      if (targets.size === 0) {
+        return sendJson(res, 200, { success: false, reason: 'No owner number configured' });
+      }
+
       try {
-        const jid = `${config.owner.phoneNumber}@c.us`;
         const text = payload.message || '';
         if (text) {
-          const sent = await client.sendMessage(jid, text);
-          if (sent?.id?._serialized) {
-            recordBotSentMessageId(sent.id._serialized);
+          registerPendingBotMessage(text);
+          for (const num of targets) {
+            try {
+              const jid = `${num}@c.us`;
+              const sent = await client.sendMessage(jid, text);
+              if (sent?.id?._serialized) {
+                recordBotSentMessageId(sent.id._serialized);
+              }
+              logger.chat('OUT', num, text);
+            } catch (targetErr) {
+              logger.warn(`Failed to send to +${num}:`, targetErr.message);
+            }
           }
-          logger.chat('OUT', config.owner.phoneNumber, text);
         }
         return sendJson(res, 200, { success: true });
       } catch (err) {
@@ -126,10 +160,14 @@ function startApiServer() {
     if (req.method === 'POST' && (url === '/api/whatsapp/disconnect' || url === '/disconnect')) {
       await stopWhatsAppClient();
       
+      // Delay briefly to allow file handles to be released
+      await new Promise(r => setTimeout(r, 800));
+
       // Optionally remove session directory to allow a fresh QR scan
       try {
         if (fs.existsSync(config.session.dataPath)) {
           fs.rmSync(config.session.dataPath, { recursive: true, force: true });
+          logger.info('WhatsApp session data deleted successfully.');
         }
       } catch (err) {
         logger.error('Failed to remove session directory on disconnect:', err);
