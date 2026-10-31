@@ -12,6 +12,7 @@ Control and automate your Linux environment directly from a private WhatsApp cha
 - **Direct Terminal Execution:** Prefix any message with `$` or `!` (e.g. `$ uname -a` or `$ git status`) to execute directly in Linux bash and get real-time terminal output.
 - **Persistent Session (`LocalAuth`):** Credentials are saved locally to `./.wweb_auth/`. You only need to scan the terminal QR code once on setup. Subsequent runs log in automatically.
 - **Quick System Actions:** Built-in commands like `status` (system RAM, CPU, uptime), `pwd`, and `cd <path>`.
+- **Self-chat control:** When the linked WhatsApp account is also the owner, messages sent from your phone to that account's own chat are accepted as prompts. Messages sent by the bot itself are ignored to prevent loops.
 
 ---
 
