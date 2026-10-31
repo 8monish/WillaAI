@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RipeAI — Embedded Linux System Terminal</title>
+    <link rel="icon" type="image/svg+xml" href="/static/ripeai-mark.svg">
+    <link rel="stylesheet" href="/static/style.css?v=neo-brutalism-7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #090a0d;
+            color: #e5e7eb;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+        .term-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: #111318;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 50;
+        }
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #151821;
+            padding: 10px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .metric-bar-wrap {
+            width: 70px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .metric-bar-fill {
+            height: 100%;
+            background: var(--accent-primary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .terminal-main-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px 24px;
+            overflow: hidden;
+        }
+        .quick-chips-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .term-chip-btn {
+            background: #1e222d;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #d1d5db;
+            font-family: 'Fira Code', monospace;
+            font-size: 11.5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all var(--trans-fast);
+        }
+        .term-chip-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(0, 229, 153, 0.1);
+        }
+        .terminal-window {
+            flex: 1;
+            background: #0d0f14;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .term-win-header {
+            background: #161922;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 11.5px;
+            color: #9ca3af;
+        }
+        .term-logs-area {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #f3f4f6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .term-input-box {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            background: #12141c;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 10px;
+        }
+        .term-prompt-tag {
+            color: var(--accent-primary);
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .term-command-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Top Navigation Header -->
+    <header class="term-header">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                <div class="brand-icon"><img src="/static/ripeai-mark.svg" alt="RipeAI"></div>
+                <span style="font-weight: 800; font-size: 17px; letter-spacing: -0.3px;">RipeAI</span>
+            </a>
+            <span style="color: var(--text-muted); font-size: 14px;">/</span>
+            <span style="font-size: 13px; font-weight: 600; color: var(--accent-primary);">Direct Linux Terminal</span>
+        </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+            <nav class="nav-tabs-group">
+            <a href="/" class="nav-tab-btn" title="Chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Chat</span>
+            </a>
+            <a href="/whatsapp" class="nav-tab-btn" title="WhatsApp">
+                <span class="nav-live-dot" id="header-wa-dot"></span>
+                <span>WhatsApp</span>
+            </a>
+            <a href="/setup" class="nav-tab-btn" title="Setup">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
+                <span>Setup</span>
+            </a>
+            <a href="/terminal" class="nav-tab-btn active" title="Terminal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <span>Terminal</span>
+            </a>
+            <a href="/settings" class="nav-tab-btn" title="Settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Settings</span>
+            </a>
+            </nav>
+            <a href="/settings" class="model-selector-chip" title="Active Model" style="text-decoration: none; font-size: 12px; padding: 5px 10px;">
+                <span>Gemini 3.8</span>
+            </a>
+            <button id="theme-toggle-btn" class="icon-btn-ghost" title="Toggle Theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- System Resource Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span style="color: var(--text-muted);">HOST:</span>
+            <strong id="stat-host" style="color: #ffffff;">bish (x86_64)</strong>
+        </div>
+        <div class="stat-item">
+            <span style="color: var(--text-muted);">UPTIME:</span>
+            <span id="stat-uptime" style="color: var(--accent-primary);">--</span>
+        </div>
+        <div class="stat-item">
+            <span style="color: var(--text-muted);">RAM:</span>
+            <div class="metric-bar-wrap"><div id="ram-fill" class="metric-bar-fill"></div></div>
+            <span id="ram-text" style="font-family: monospace;">--</span>
+        </div>
+        <div class="stat-item">
+            <span style="color: var(--text-muted);">DISK:</span>
+            <div class="metric-bar-wrap"><div id="disk-fill" class="metric-bar-fill"></div></div>
+            <span id="disk-text" style="font-family: monospace;">--</span>
+        </div>
+        <div class="stat-item" style="margin-left: auto;">
+            <span style="color: var(--text-muted);">CWD:</span>
+            <code id="stat-cwd" style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 11px;">/home/monish/Projects/RipeAI</code>
+        </div>
+    </div>
+
+    <!-- Main Terminal Container -->
+    <main class="terminal-main-wrap">
+
+        <!-- Quick Chips Bar -->
+        <div class="quick-chips-row">
+            <span style="font-size: 11.5px; font-weight: 700; color: #9ca3af;">Quick:</span>
+            <button class="term-chip-btn" onclick="runCommand('uname -a')">uname -a</button>
+            <button class="term-chip-btn" onclick="runCommand('free -h')">free -h</button>
+            <button class="term-chip-btn" onclick="runCommand('df -h')">df -h</button>
+            <button class="term-chip-btn" onclick="runCommand('ps aux | head -n 12')">ps top 12</button>
+            <button class="term-chip-btn" onclick="runCommand('git status')">git status</button>
+            <button class="term-chip-btn" onclick="runCommand('git log -n 5 --oneline')">git log</button>
+            <button class="term-chip-btn" onclick="runCommand('ls -la')">ls -la</button>
+            <button class="term-chip-btn" onclick="runCommand('agy --version')">agy --version</button>
+            <button class="term-chip-btn" onclick="runCommand('curl -s localhost:8000/api/whatsapp/status')">wa status</button>
+        </div>
+
+        <!-- Terminal Window Box -->
+        <div class="terminal-window">
+            <div class="term-win-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></div>
+                    <span style="margin-left: 6px; font-weight: 600;">Linux Bash Shell — <span id="term-pwd">~/Projects/RipeAI</span></span>
+                </div>
+                <div>
+                    <button class="term-chip-btn" onclick="clearTerm()" style="padding: 2px 8px; font-size: 11px;">Clear Buffer</button>
+                </div>
+            </div>
+
+            <!-- Terminal Output Logs -->
+            <div id="term-logs" class="term-logs-area">RipeAI Linux Terminal Workspace [CachyOS x86_64]
+Connected directly to system bash shell. Type commands below or click the quick chips above.
+</div>
+
+            <!-- Command Input Form -->
+            <form id="term-form" class="term-input-box" onsubmit="handleFormSubmit(event)">
+                <span class="term-prompt-tag" id="prompt-tag">monish@bish:~$</span>
+                <input id="term-input" class="term-command-input" type="text" placeholder="Type a shell command (e.g. ls, git status, top)..." autocomplete="off" spellcheck="false">
+                <button type="submit" class="clean-btn clean-btn-primary" style="padding: 6px 14px; font-size: 12px; font-weight: 700;">
+                    Run
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const logs = document.getElementById('term-logs');
+        const input = document.getElementById('term-input');
+        const promptTag = document.getElementById('prompt-tag');
+        const pwdSpan = document.getElementById('term-pwd');
+        let history = [];
+        let historyIdx = -1;
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/system/stats');
+                if (!res.ok) return;
+                const d = await res.json();
+
+                document.getElementById('stat-host').textContent = `${d.hostname} (${d.arch})`;
+                document.getElementById('stat-uptime').textContent = d.uptime;
+                document.getElementById('stat-cwd').textContent = d.cwd;
+
+                if (promptTag) promptTag.textContent = `${d.user}@${d.hostname}:~$`;
+                if (pwdSpan) pwdSpan.textContent = d.cwd;
+
+                if (d.memory) {
+                    const memUsedGb = (d.memory.used_mb / 1024).toFixed(1);
+                    const memTotGb = (d.memory.total_mb / 1024).toFixed(1);
+                    document.getElementById('ram-text').textContent = `${memUsedGb}/${memTotGb} GB (${d.memory.percent}%)`;
+                    document.getElementById('ram-fill').style.width = `${d.memory.percent}%`;
+                }
+
+                if (d.disk) {
+                    document.getElementById('disk-text').textContent = `${d.disk.used_gb}/${d.disk.total_gb} GB (${d.disk.percent}%)`;
+                    document.getElementById('disk-fill').style.width = `${d.disk.percent}%`;
+                }
+            } catch (_) {}
+        }
+
+        async function runCommand(cmd) {
+            if (!cmd) return;
+            history.push(cmd);
+            historyIdx = history.length;
+
+            appendOutput(`\n${promptTag.textContent} ${cmd}`);
+
+            try {
+                const res = await fetch('/api/terminal/exec', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                });
+                const data = await res.json();
+
+                if (data.output) {
+                    appendOutput(data.output);
+                }
+                if (data.cwd) {
+                    document.getElementById('stat-cwd').textContent = data.cwd;
+                    pwdSpan.textContent = data.cwd;
+                }
+            } catch (err) {
+                appendOutput(`Error: ${err.message}`);
+            }
+        }
+
+        function appendOutput(text) {
+            logs.textContent += (logs.textContent.endsWith('\n') ? '' : '\n') + text;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function clearTerm() {
+            logs.textContent = 'Terminal buffer cleared.\n';
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            input.value = '';
+            runCommand(cmd);
+        }
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') {
+                if (history.length > 0 && historyIdx > 0) {
+                    historyIdx--;
+                    input.value = history[historyIdx];
+                }
+            } else if (e.key === 'ArrowDown') {
+                if (historyIdx < history.length - 1) {
+                    historyIdx++;
+                    input.value = history[historyIdx];
+                } else {
+                    historyIdx = history.length;
+                    input.value = '';
+                }
+            }
+        });
+
+        // WhatsApp header dot polling
+        async function pollWaDot() {
+            try {
+                const res = await fetch('/api/whatsapp/status');
+                if (!res.ok) return;
+                const d = await res.json();
+                const dot = document.getElementById('header-wa-dot');
+                if (dot) {
+                    dot.style.background = d.status === 'connected' ? '#10b981' : (d.status === 'qr' ? '#f59e0b' : 'var(--text-muted)');
+                }
+            } catch (_) {}
+        }
+
+        fetchStats();
+        setInterval(fetchStats, 4000);
+        pollWaDot();
+        setInterval(pollWaDot, 3500);
+        setTimeout(() => input.focus(), 150);
+    </script>
+</body>
+</html>

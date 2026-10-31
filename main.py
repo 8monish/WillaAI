@@ -14,6 +14,8 @@ import threading
 import segno
 import io
 import base64
+import socket
+import platform
 
 # WhatsApp is integrated via Node.js whatsapp-web.js bridge service
 
@@ -330,10 +332,106 @@ class ChatRequest(BaseModel):
     provider: Optional[str] = "antigravity"
     engine: Optional[str] = "antigravity"
 
+def get_system_stats() -> Dict:
+    mem_total_mb = 0
+    mem_avail_mb = 0
+    if os.path.exists("/proc/meminfo"):
+        try:
+            with open("/proc/meminfo", "r") as f:
+                lines = f.readlines()
+            for line in lines:
+                if line.startswith("MemTotal:"):
+                    mem_total_mb = int(line.split()[1]) // 1024
+                elif line.startswith("MemAvailable:"):
+                    mem_avail_mb = int(line.split()[1]) // 1024
+        except Exception:
+            pass
+    mem_used_mb = max(0, mem_total_mb - mem_avail_mb)
+    mem_pct = round((mem_used_mb / mem_total_mb * 100), 1) if mem_total_mb else 0
+
+    disk = shutil.disk_usage(current_cwd)
+    disk_total_gb = round(disk.total / (1024**3), 1)
+    disk_used_gb = round(disk.used / (1024**3), 1)
+    disk_free_gb = round(disk.free / (1024**3), 1)
+    disk_pct = round((disk.used / disk.total * 100), 1) if disk.total else 0
+
+    uptime_str = "Active"
+    if os.path.exists("/proc/uptime"):
+        try:
+            with open("/proc/uptime", "r") as f:
+                secs = float(f.readline().split()[0])
+            hours = int(secs // 3600)
+            mins = int((secs % 3600) // 60)
+            uptime_str = f"{hours}h {mins}m"
+        except Exception:
+            pass
+
+    user = os.getenv("USER") or "monish"
+    hostname = socket.gethostname()
+
+    return {
+        "hostname": hostname,
+        "user": user,
+        "os": f"{platform.system()} {platform.release()}",
+        "arch": platform.machine(),
+        "cpu_count": os.cpu_count() or 1,
+        "uptime": uptime_str,
+        "cwd": current_cwd,
+        "memory": {
+            "total_mb": mem_total_mb,
+            "used_mb": mem_used_mb,
+            "free_mb": mem_avail_mb,
+            "percent": mem_pct
+        },
+        "disk": {
+            "total_gb": disk_total_gb,
+            "used_gb": disk_used_gb,
+            "free_gb": disk_free_gb,
+            "percent": disk_pct
+        }
+    }
+
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
     with open("static/index.html", "r", encoding="utf-8") as f:
         return f.read()
+
+@app.get("/whatsapp", response_class=HTMLResponse)
+async def read_whatsapp_page():
+    path = "static/whatsapp.html"
+    if not os.path.exists(path):
+        path = "static/index.html"
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/setup", response_class=HTMLResponse)
+@app.get("/whatsapp/setup", response_class=HTMLResponse)
+async def read_setup_page():
+    path = "static/setup.html"
+    if not os.path.exists(path):
+        path = "static/index.html"
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/terminal", response_class=HTMLResponse)
+async def read_terminal_page():
+    path = "static/terminal.html"
+    if not os.path.exists(path):
+        path = "static/index.html"
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/settings", response_class=HTMLResponse)
+async def read_settings_page():
+    path = "static/settings.html"
+    if not os.path.exists(path):
+        path = "static/index.html"
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/api/system/stats")
+async def api_system_stats():
+    return JSONResponse(get_system_stats())
 
 @app.get("/api/model/status")
 async def get_cli_status():
@@ -544,6 +642,15 @@ async def api_wa_start(payload: Optional[WhatsAppStartPayload] = None):
     except Exception:
         pass
     return JSONResponse({"status": "starting", "owner_number": data.get("owner_number", "")})
+
+@app.post("/api/whatsapp/ping")
+async def api_wa_ping():
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(f"{WA_BRIDGE_URL}/api/whatsapp/ping")
+            return JSONResponse(resp.json(), status_code=resp.status_code)
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 @app.post("/api/whatsapp/disconnect")
 async def api_wa_disconnect():

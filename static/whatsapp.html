@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RipeAI — WhatsApp Remote Control Hub</title>
+    <link rel="icon" type="image/svg+xml" href="/static/ripeai-mark.svg">
+    <link rel="stylesheet" href="/static/style.css?v=neo-brutalism-7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-page);
+        }
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-medium);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .hub-container {
+            flex: 1;
+            max-width: 1140px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .banner-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-card);
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
+        }
+        .card-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-card);
+            transition: transform var(--trans-fast), box-shadow var(--trans-fast);
+        }
+        .card-box:hover {
+            border-color: var(--border-focus);
+            box-shadow: var(--shadow-floating);
+        }
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+        .status-pill.connected {
+            background: var(--green-light);
+            color: var(--green-text);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        .status-pill.waiting {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        .status-pill.offline {
+            background: var(--bg-surface-hover);
+            color: var(--text-muted);
+            border-color: var(--border-medium);
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            display: inline-block;
+        }
+        .console-box {
+            background: #0d0e12;
+            color: #eceef2;
+            font-family: 'Fira Code', monospace;
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            font-size: 12px;
+            line-height: 1.6;
+            border: 1px solid var(--border-medium);
+            max-height: 220px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Top Navigation Header -->
+    <header class="page-header">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                <div class="brand-icon"><img src="/static/ripeai-mark.svg" alt="RipeAI"></div>
+                <span style="font-weight: 800; font-size: 17px; letter-spacing: -0.3px;">RipeAI</span>
+            </a>
+            <span style="color: var(--text-muted); font-size: 14px;">/</span>
+            <span style="font-size: 13px; font-weight: 600; color: var(--accent-primary);">WhatsApp Remote Control Center</span>
+        </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+            <nav class="nav-tabs-group">
+            <a href="/" class="nav-tab-btn" title="Chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Chat</span>
+            </a>
+            <a href="/whatsapp" class="nav-tab-btn active" title="WhatsApp">
+                <span class="nav-live-dot" id="header-wa-dot"></span>
+                <span>WhatsApp</span>
+            </a>
+            <a href="/setup" class="nav-tab-btn" title="Setup">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
+                <span>Setup</span>
+            </a>
+            <a href="/terminal" class="nav-tab-btn" title="Terminal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <span>Terminal</span>
+            </a>
+            <a href="/settings" class="nav-tab-btn" title="Settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Settings</span>
+            </a>
+            </nav>
+            <a href="/settings" class="model-selector-chip" title="Active Model" style="text-decoration: none; font-size: 12px; padding: 5px 10px;">
+                <span>Gemini 3.8</span>
+            </a>
+            <button id="theme-toggle-btn" class="icon-btn-ghost" title="Toggle Theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="hub-container">
+
+        <!-- Status Banner -->
+        <div class="banner-card">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                    <div id="status-pill" class="status-pill connected">
+                        <span class="live-dot"></span>
+                        <span id="status-text">Connected</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted);">Internal Bridge: 127.0.0.1:8008</span>
+                </div>
+                <h1 style="font-size: 22px; font-weight: 800; margin: 0 0 4px 0; color: var(--text-primary);">
+                    WhatsApp Remote System Copilot
+                </h1>
+                <p style="font-size: 13.5px; color: var(--text-secondary); margin: 0;">
+                    Execute Linux bash commands and run local Gemini agent workflows right from your WhatsApp direct message.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button id="ping-btn" class="clean-btn clean-btn-primary" onclick="triggerPing()" style="font-weight: 700; padding: 10px 18px;">
+                    🔔 Ping My WhatsApp
+                </button>
+                <a href="/setup" class="clean-btn" style="text-decoration: none; padding: 10px 16px; font-weight: 600;">
+                    ⚙️ Setup Wizard
+                </a>
+                <button id="disconnect-btn" class="clean-btn clean-btn-danger" onclick="disconnectWhatsApp()" style="padding: 10px 14px;">
+                    Disconnect
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Feature Grid -->
+        <div class="cards-grid">
+
+            <!-- CARD 1: Authorized Phone Controller -->
+            <div class="card-box">
+                <div class="card-title-row">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                    <span>Authorized Controller Phone</span>
+                </div>
+                <div style="font-size: 28px; font-weight: 800; color: var(--text-primary); margin: 4px 0 10px 0;" id="phone-display">
+                    +919363936963
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">
+                    <strong style="color: var(--accent-primary);">🔒 Strict Number Isolation:</strong> Only messages from this DM will run commands or generate completions. Messages from any other sender or group are silently discarded.
+                </div>
+                <div style="margin-top: auto; display: flex; gap: 8px;">
+                    <button class="clean-btn" onclick="promptChangeNumber()" style="flex: 1; padding: 8px; font-size: 12.5px;">
+                        Change Authorized Number
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARD 2: System Agent & Engine Configuration -->
+            <div class="card-box">
+                <div class="card-title-row">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                    <span>System Agent Engine</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px;">
+                    <div><strong>Host Machine:</strong> <code id="host-name">bish (Linux x64)</code></div>
+                    <div><strong>AI CLI:</strong> <code>/usr/bin/agy</code> (v1.4.4)</div>
+                    <div><strong>Active Model:</strong> <span style="color: var(--accent-primary); font-weight: 700;">Gemini 3.8 Flash (High)</span></div>
+                    <div><strong>Project Workspace:</strong> <code style="word-break: break-all;">/home/monish/Projects/RipeAI</code></div>
+                    <div><strong>Persistence:</strong> <code>LocalAuth (.wweb_auth)</code></div>
+                </div>
+                <div style="margin-top: auto; padding: 10px; background: var(--bg-surface-hover); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary);">
+                    💡 Prompts run directly on this local Linux machine using native tools. No API keys or external server relays required.
+                </div>
+            </div>
+
+            <!-- CARD 3: Command Cheatsheet -->
+            <div class="card-box">
+                <div class="card-title-row">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                    <span>WhatsApp Syntax Cheatsheet</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px;">
+                    <div>
+                        <strong>1. Direct Bash Commands:</strong> Prefix with <code>$</code><br>
+                        <code>$ free -h</code>, <code>$ git status</code>, <code>$ ps aux | head</code>
+                    </div>
+                    <div>
+                        <strong>2. Autonomous Agent:</strong> Send any plain text prompt<br>
+                        <em>"Check disk space and remove old log files"</em>
+                    </div>
+                    <div>
+                        <strong>3. Built-in Utilities:</strong><br>
+                        <code>status</code>, <code>pwd</code>, <code>help</code>, <code>clear</code>
+                    </div>
+                </div>
+                <div style="margin-top: auto;">
+                    <a href="/terminal" class="clean-btn" style="display: block; text-align: center; text-decoration: none; padding: 8px; font-size: 12.5px; font-weight: 600;">
+                        Open Web Terminal →
+                    </a>
+                </div>
+            </div>
+
+            <!-- CARD 4: Live Activity Simulator / Test Prompt Console -->
+            <div class="card-box" style="grid-column: 1 / -1;">
+                <div class="card-title-row">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    <span>Test Handshake & DM Interaction Simulator</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 12px 0;">
+                    Send a test prompt or handshake message to test the bridge connection directly from the browser:
+                </p>
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <input id="test-msg-input" type="text" class="clean-input" placeholder="Type a test command e.g. $ uname -a or Hello RipeAI" style="flex: 1; padding: 10px 14px; font-size: 13px;">
+                    <button class="clean-btn clean-btn-primary" onclick="sendTestCommand()" style="font-weight: 700; padding: 10px 20px;">
+                        Execute / Test
+                    </button>
+                </div>
+                <div class="console-box" id="sim-console">
+                    [System Ready] WhatsApp bridge listening on 127.0.0.1:8008.<br>
+                    [Security Policy] Active controller number: +919363936963.<br>
+                    Click "Ping My WhatsApp" above or send a command from your phone to start remote interaction.
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Toast Container -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3500);
+        }
+
+        async function pollStatus() {
+            try {
+                const res = await fetch('/api/whatsapp/status');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const pill = document.getElementById('status-pill');
+                const text = document.getElementById('status-text');
+                const phoneDisplay = document.getElementById('phone-display');
+                const headerDot = document.getElementById('header-wa-dot');
+
+                if (data.status === 'connected') {
+                    pill.className = 'status-pill connected';
+                    text.textContent = 'Active & Connected';
+                    if (headerDot) headerDot.style.background = '#10b981';
+                } else if (data.status === 'qr') {
+                    pill.className = 'status-pill waiting';
+                    text.textContent = 'Scan QR in Setup Wizard';
+                    if (headerDot) headerDot.style.background = '#f59e0b';
+                } else {
+                    pill.className = 'status-pill offline';
+                    text.textContent = 'Disconnected';
+                    if (headerDot) headerDot.style.background = 'var(--text-muted)';
+                }
+
+                if (data.owner_number) {
+                    phoneDisplay.textContent = `+${data.owner_number}`;
+                } else {
+                    phoneDisplay.textContent = 'Not Configured';
+                }
+            } catch (_) {}
+        }
+
+        async function triggerPing() {
+            const btn = document.getElementById('ping-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Sending Ping...';
+            }
+            try {
+                const res = await fetch('/api/whatsapp/ping', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Ping handshake sent to your WhatsApp DM!');
+                    appendLog('📤 [Ping Handshake sent to WhatsApp DM]');
+                } else {
+                    showToast(data.message || 'WhatsApp not ready yet');
+                    appendLog('⚠️ ' + (data.message || 'WhatsApp bridge offline'));
+                }
+            } catch (err) {
+                showToast('Ping failed: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🔔 Ping My WhatsApp';
+                }
+            }
+        }
+
+        async function disconnectWhatsApp() {
+            if (!confirm('Disconnect WhatsApp session? You will need to scan QR code again in the Setup Wizard.')) return;
+            try {
+                await fetch('/api/whatsapp/disconnect', { method: 'POST' });
+                showToast('WhatsApp session disconnected.');
+                appendLog('🛑 [WhatsApp Session Disconnected by User]');
+                pollStatus();
+            } catch (err) {
+                showToast('Disconnect error: ' + err.message);
+            }
+        }
+
+        async function promptChangeNumber() {
+            const num = prompt('Enter new authorized WhatsApp phone number with country code (e.g. 919363936963):', '919363936963');
+            if (!num) return;
+            const clean = num.replace(/\D/g, '');
+            if (clean.length < 8) {
+                alert('Invalid phone number format.');
+                return;
+            }
+            await fetch('/api/whatsapp/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owner_number: clean })
+            });
+            showToast(`Authorized number updated to +${clean}`);
+            pollStatus();
+        }
+
+        async function sendTestCommand() {
+            const inp = document.getElementById('test-msg-input');
+            const cmd = inp?.value?.trim();
+            if (!cmd) return;
+
+            appendLog(`> ${cmd}`);
+            inp.value = '';
+
+            try {
+                if (cmd.startsWith('$')) {
+                    const bash = cmd.substring(1).trim();
+                    const res = await fetch('/api/terminal/exec', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ command: bash })
+                    });
+                    const d = await res.json();
+                    appendLog(d.output || '(No output)');
+                } else {
+                    appendLog(`[Simulation] Would send prompt to Gemini 3.8 Flash agent...`);
+                }
+            } catch (e) {
+                appendLog(`Error: ${e.message}`);
+            }
+        }
+
+        function appendLog(msg) {
+            const c = document.getElementById('sim-console');
+            if (!c) return;
+            const line = document.createElement('div');
+            line.innerHTML = msg.replace(/\n/g, '<br>');
+            line.style.marginTop = '4px';
+            c.appendChild(line);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        // Theme toggle
+        document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-theme');
+            localStorage.setItem('app_theme', isDark ? 'dark' : 'light');
+        });
+        if (localStorage.getItem('app_theme') === 'light') {
+            document.body.classList.remove('dark-theme');
+        }
+
+        pollStatus();
+        setInterval(pollStatus, 3000);
+    </script>
+</body>
+</html>

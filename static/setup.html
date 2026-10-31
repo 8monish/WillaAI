@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RipeAI — WhatsApp Remote Setup Wizard</title>
+    <link rel="icon" type="image/svg+xml" href="/static/ripeai-mark.svg">
+    <link rel="stylesheet" href="/static/style.css?v=neo-brutalism-7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-page);
+        }
+        .setup-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-medium);
+        }
+        .setup-body-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .setup-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-modal);
+            width: 100%;
+            max-width: 680px;
+            padding: 36px;
+            animation: fadeIn 0.25s ease-out;
+        }
+        .stepper-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .stepper-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--trans-fast);
+        }
+        .stepper-item.active {
+            color: var(--accent-primary);
+        }
+        .stepper-item.completed {
+            color: var(--text-primary);
+        }
+        .stepper-bubble {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-surface-hover);
+            border: 2px solid var(--border-medium);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all var(--trans-fast);
+        }
+        .stepper-item.active .stepper-bubble {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: #fff;
+            box-shadow: 0 0 12px var(--accent-light);
+        }
+        .stepper-item.completed .stepper-bubble {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: #fff;
+        }
+        .step-panel {
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .step-panel.active {
+            display: block;
+        }
+        .qr-display-box {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-medium);
+            box-shadow: var(--shadow-card);
+            min-height: 220px;
+            min-width: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .pulse-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Top Navigation Header -->
+    <header class="setup-nav">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                <div class="brand-icon"><img src="/static/ripeai-mark.svg" alt="RipeAI"></div>
+                <span style="font-weight: 800; font-size: 17px; letter-spacing: -0.3px;">RipeAI</span>
+            </a>
+            <span style="color: var(--text-muted); font-size: 14px;">/</span>
+            <span style="font-size: 13px; font-weight: 600; color: var(--accent-primary);">WhatsApp Remote Setup Wizard</span>
+        </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+            <nav class="nav-tabs-group">
+            <a href="/" class="nav-tab-btn" title="Chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Chat</span>
+            </a>
+            <a href="/whatsapp" class="nav-tab-btn" title="WhatsApp">
+                <span class="nav-live-dot" id="header-wa-dot"></span>
+                <span>WhatsApp</span>
+            </a>
+            <a href="/setup" class="nav-tab-btn active" title="Setup">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
+                <span>Setup</span>
+            </a>
+            <a href="/terminal" class="nav-tab-btn" title="Terminal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <span>Terminal</span>
+            </a>
+            <a href="/settings" class="nav-tab-btn" title="Settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Settings</span>
+            </a>
+            </nav>
+            <a href="/settings" class="model-selector-chip" title="Active Model" style="text-decoration: none; font-size: 12px; padding: 5px 10px;">
+                <span>Gemini 3.8</span>
+            </a>
+            <button id="theme-toggle-btn" class="icon-btn-ghost" title="Toggle Theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Wizard Body -->
+    <main class="setup-body-wrap">
+        <div class="setup-card">
+            
+            <!-- 4-Step Stepper Navigation -->
+            <div class="stepper-nav">
+                <div class="stepper-item active" id="nav-step-1" onclick="goToStep(1)">
+                    <div class="stepper-bubble">1</div>
+                    <span>Scan QR</span>
+                </div>
+                <div style="flex: 1; height: 2px; background: var(--border-medium); margin: 0 10px;"></div>
+                <div class="stepper-item" id="nav-step-2" onclick="goToStep(2)">
+                    <div class="stepper-bubble">2</div>
+                    <span>Connected</span>
+                </div>
+                <div style="flex: 1; height: 2px; background: var(--border-medium); margin: 0 10px;"></div>
+                <div class="stepper-item" id="nav-step-3" onclick="goToStep(3)">
+                    <div class="stepper-bubble">3</div>
+                    <span>Phone Number</span>
+                </div>
+                <div style="flex: 1; height: 2px; background: var(--border-medium); margin: 0 10px;"></div>
+                <div class="stepper-item" id="nav-step-4" onclick="goToStep(4)">
+                    <div class="stepper-bubble">4</div>
+                    <span>Ready</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: Scan QR Code -->
+            <div id="step-1" class="step-panel active">
+                <div style="text-align: center; margin-bottom: 22px;">
+                    <div class="pulse-tag" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; margin-bottom: 8px;">
+                        <span>Step 1 of 4: Authentication</span>
+                    </div>
+                    <h1 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; color: var(--text-primary);">
+                        Link WhatsApp Web with RipeAI
+                    </h1>
+                    <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 480px; margin: 0 auto;">
+                        Scan this QR code using WhatsApp on your phone to authorize remote machine execution.
+                    </p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; align-items: center; margin: 20px 0;">
+                    <div class="qr-display-box">
+                        <img id="qr-img" src="" alt="WhatsApp QR Code" style="max-width: 200px; width: 100%; display: none;">
+                        <div id="qr-loading" style="font-size: 13px; color: var(--text-muted); text-align: center;">
+                            ⏳ Loading WhatsApp Web pairing QR...
+                        </div>
+                    </div>
+                    <div id="qr-status-msg" style="margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--accent-terracotta);">
+                        🟡 Waiting for scan from WhatsApp...
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-surface-hover); border-radius: var(--radius-md); padding: 14px 18px; margin: 20px 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); border: 1px solid var(--border-subtle);">
+                    <div><strong>1.</strong> Open <strong>WhatsApp</strong> on your phone</div>
+                    <div><strong>2.</strong> Go to <strong>Settings</strong> > <strong>Linked Devices</strong></div>
+                    <div><strong>3.</strong> Tap <strong>Link a Device</strong> and point your camera at the QR code above</div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
+                    <button id="refresh-qr-btn" class="clean-btn" onclick="refreshQr()">
+                        🔄 Refresh QR Code
+                    </button>
+                    <button class="clean-btn clean-btn-primary" onclick="goToStep(2)" style="font-weight: 700; padding: 10px 20px;">
+                        Already Linked? Next Step →
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Connection Verified -->
+            <div id="step-2" class="step-panel">
+                <div style="text-align: center; padding: 20px 0;">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--green-light); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 18px auto; box-shadow: 0 0 20px var(--accent-light);">
+                        ✔
+                    </div>
+                    <div class="pulse-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; margin-bottom: 8px;">
+                        <span>Step 2 of 4: Session Active</span>
+                    </div>
+                    <h2 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; color: var(--text-primary);">
+                        WhatsApp Web Connected!
+                    </h2>
+                    <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 460px; margin: 0 auto;">
+                        Session credentials successfully stored in <code>.wweb_auth</code>. Your connection will persist without needing to scan every time.
+                    </p>
+                </div>
+
+                <div style="background: var(--bg-surface-hover); border-radius: var(--radius-md); padding: 18px; margin: 20px 0; font-size: 13px; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-subtle);">
+                    <div><strong>🔐 Authentication Strategy:</strong> <code>LocalAuth (whatsapp-web.js)</code></div>
+                    <div><strong>💻 Host Machine:</strong> <code id="host-text">Linux x64 (bish)</code></div>
+                    <div><strong>🤖 System Agent CLI:</strong> <code>/usr/bin/agy (Gemini 3.8 Flash High)</code></div>
+                    <div><strong>📂 Project Root:</strong> <code>/home/monish/Projects/RipeAI</code></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 28px;">
+                    <button class="clean-btn" onclick="goToStep(1)">
+                        ← Back to QR
+                    </button>
+                    <button class="clean-btn clean-btn-primary" onclick="goToStep(3)" style="font-weight: 700; padding: 10px 20px;">
+                        Configure Controller Phone Number →
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Configure Controller Phone Number -->
+            <div id="step-3" class="step-panel">
+                <div style="text-align: center; margin-bottom: 22px;">
+                    <div class="pulse-tag" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; margin-bottom: 8px;">
+                        <span>Step 3 of 4: Security & Access</span>
+                    </div>
+                    <h2 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; color: var(--text-primary);">
+                        Authorize Controller WhatsApp Number
+                    </h2>
+                    <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 480px; margin: 0 auto;">
+                        Specify the exact WhatsApp number authorized to control this Linux machine.
+                    </p>
+                </div>
+
+                <div style="margin: 24px 0;">
+                    <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 8px;">
+                        Your WhatsApp Phone Number (with Country Code)
+                    </label>
+                    <input id="owner-phone-input" type="tel" class="clean-input" value="919363936963" placeholder="e.g. 919363936963" style="font-size: 16px; font-weight: 700; padding: 12px 16px; width: 100%;">
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+                        Include your country code with no + or spaces (e.g. <code>919363936963</code>).
+                    </p>
+                </div>
+
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-md); padding: 14px 18px; margin: 20px 0; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;">
+                    <div style="font-weight: 800; color: var(--accent-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>🔒</span> Strict Sender Isolation Policy
+                    </div>
+                    RipeAI will strictly reject and ignore all messages from any other numbers or groups. Only text messages from your authorized number will execute system commands or trigger AI completions.
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 28px;">
+                    <button class="clean-btn" onclick="goToStep(2)">
+                        ← Back
+                    </button>
+                    <button id="save-phone-btn" class="clean-btn clean-btn-primary" onclick="savePhoneNumber()" style="font-weight: 700; padding: 10px 22px;">
+                        Save & Send Handshake Test →
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Handshake & Launch -->
+            <div id="step-4" class="step-panel">
+                <div style="text-align: center; padding: 16px 0 20px 0;">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--green-light); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 16px auto; box-shadow: 0 0 20px var(--accent-light);">
+                        🚀
+                    </div>
+                    <div class="pulse-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; margin-bottom: 8px;">
+                        <span>Step 4 of 4: Setup Complete</span>
+                    </div>
+                    <h2 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; color: var(--text-primary);">
+                        Pairing Complete & Handshake Sent!
+                    </h2>
+                    <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 480px; margin: 0 auto;">
+                        Your phone is now connected as the remote copilot controller for this machine.
+                    </p>
+                </div>
+
+                <div style="background: var(--bg-surface-hover); border-radius: var(--radius-md); border: 1px solid var(--border-medium); padding: 16px 20px; margin: 18px 0; font-family: monospace; font-size: 12.5px; color: var(--text-primary); line-height: 1.6;">
+                    <div style="font-weight: 800; color: var(--accent-primary); margin-bottom: 6px; font-family: sans-serif;">
+                        📤 Handshake sent to WhatsApp DM:
+                    </div>
+                    👋 *Hi! RipeAI is online and connected to your Linux machine.*<br>
+                    🖥️ *Host:* `bish` (monish)<br>
+                    📂 *Workspace:* `/home/monish/Projects/RipeAI`<br>
+                    🤖 *AI Engine:* *Gemini 3.8 Flash (Local System Agent)*<br>
+                    • Try sending: <code>$ uname -a</code> or <code>Check disk and RAM</code>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 28px;">
+                    <a href="/whatsapp" class="clean-btn" style="flex: 1; text-align: center; text-decoration: none; padding: 12px; font-weight: 600;">
+                        Open WhatsApp Hub
+                    </a>
+                    <a href="/" class="clean-btn clean-btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 12px; font-weight: 800;">
+                        Launch Terminal & Chat →
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Toast Container -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        let currentStep = 1;
+        let prevStatus = null;
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3500);
+        }
+
+        function goToStep(num) {
+            currentStep = num;
+            for (let i = 1; i <= 4; i++) {
+                const nav = document.getElementById(`nav-step-${i}`);
+                const panel = document.getElementById(`step-${i}`);
+                if (!nav || !panel) continue;
+
+                nav.classList.remove('active', 'completed');
+                panel.classList.remove('active');
+
+                if (i === num) {
+                    nav.classList.add('active');
+                    panel.classList.add('active');
+                } else if (i < num) {
+                    nav.classList.add('completed');
+                }
+            }
+            if (num === 1) pollStatus();
+            if (num === 3) setTimeout(() => document.getElementById('owner-phone-input')?.focus(), 100);
+        }
+
+        async function pollStatus() {
+            try {
+                const res = await fetch('/api/whatsapp/status');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                // Top nav dot
+                const dot = document.getElementById('header-wa-dot');
+                if (dot) {
+                    dot.style.background = data.status === 'connected' ? '#10b981' : (data.status === 'qr' ? '#f59e0b' : 'var(--text-muted)');
+                }
+
+                // QR updates
+                const qrImg = document.getElementById('qr-img');
+                const qrLoading = document.getElementById('qr-loading');
+                const qrStatus = document.getElementById('qr-status-msg');
+
+                if (data.status === 'connected') {
+                    if (qrStatus) {
+                        qrStatus.textContent = '🟢 WhatsApp Connected!';
+                        qrStatus.style.color = '#10b981';
+                    }
+                    if (currentStep === 1 && prevStatus && prevStatus !== 'connected') {
+                        showToast('🎉 WhatsApp linked successfully!');
+                        goToStep(2);
+                    }
+                } else if (data.status === 'qr' && data.qr_base64) {
+                    const src = data.qr_base64.startsWith('data:') ? data.qr_base64 : `data:image/png;base64,${data.qr_base64}`;
+                    if (qrImg) {
+                        qrImg.src = src;
+                        qrImg.style.display = 'block';
+                    }
+                    if (qrLoading) qrLoading.style.display = 'none';
+                    if (qrStatus) {
+                        qrStatus.textContent = '🟡 Waiting for scan from WhatsApp...';
+                        qrStatus.style.color = '#f59e0b';
+                    }
+                } else if (data.status === 'starting') {
+                    if (qrLoading) {
+                        qrLoading.textContent = '⏳ Initializing WhatsApp Web browser...';
+                        qrLoading.style.display = 'block';
+                    }
+                    if (qrImg) qrImg.style.display = 'none';
+                    if (qrStatus) {
+                        qrStatus.textContent = '⏳ Starting session...';
+                        qrStatus.style.color = '#3b82f6';
+                    }
+                }
+
+                if (data.owner_number) {
+                    const inp = document.getElementById('owner-phone-input');
+                    if (inp && !inp.value) inp.value = data.owner_number;
+                }
+
+                prevStatus = data.status;
+            } catch (_) {}
+        }
+
+        async function refreshQr() {
+            showToast('Restarting WhatsApp service for fresh QR code...');
+            const phone = document.getElementById('owner-phone-input')?.value?.trim() || '';
+            await fetch('/api/whatsapp/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owner_number: phone })
+            });
+            pollStatus();
+        }
+
+        async function savePhoneNumber() {
+            const raw = document.getElementById('owner-phone-input')?.value?.trim() || '';
+            const clean = raw.replace(/\D/g, '');
+            if (!clean || clean.length < 8) {
+                showToast('Please enter your WhatsApp number with country code (e.g. 919363936963)');
+                document.getElementById('owner-phone-input')?.focus();
+                return;
+            }
+
+            const btn = document.getElementById('save-phone-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Saving & Sending Handshake...';
+            }
+
+            try {
+                await fetch('/api/whatsapp/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner_number: clean })
+                });
+
+                const pingRes = await fetch('/api/whatsapp/ping', { method: 'POST' });
+                const pingData = await pingRes.json().catch(() => ({}));
+                if (pingData.success) {
+                    showToast(`✅ Welcome handshake sent to +${clean}!`);
+                } else {
+                    showToast(`Saved +${clean}. Syncing service...`);
+                }
+
+                goToStep(4);
+            } catch (err) {
+                showToast('Failed to save: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Save & Send Handshake Test →';
+                }
+            }
+        }
+
+        // Theme toggle
+        document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-theme');
+            localStorage.setItem('app_theme', isDark ? 'dark' : 'light');
+        });
+        if (localStorage.getItem('app_theme') === 'light') {
+            document.body.classList.remove('dark-theme');
+        }
+
+        // Init
+        pollStatus();
+        setInterval(pollStatus, 3000);
+    </script>
+</body>
+</html>

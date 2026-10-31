@@ -6,7 +6,9 @@ const {
   getQrBase64, 
   setOwnerNumber, 
   initializeWhatsAppClient, 
-  stopWhatsAppClient 
+  stopWhatsAppClient,
+  getClient,
+  isClientReady
 } = require('./whatsapp');
 const logger = require('../utils/logger');
 
@@ -78,6 +80,21 @@ function startApiServer() {
         status: getWaStatus(),
         owner_number: config.owner.phoneNumber,
       });
+    }
+
+    // POST /api/whatsapp/ping
+    if (req.method === 'POST' && (url === '/api/whatsapp/ping' || url === '/ping')) {
+      const client = getClient();
+      if (!client || !isClientReady() || !config.owner.phoneNumber) {
+        return sendJson(res, 400, { success: false, error: 'Client not connected or owner number not set.' });
+      }
+      try {
+        const jid = `${config.owner.phoneNumber}@c.us`;
+        await client.sendMessage(jid, '🔔 *RipeAI Remote Ping:* Your machine is connected and actively listening for commands! 🚀');
+        return sendJson(res, 200, { success: true, message: `Ping sent to +${config.owner.phoneNumber}` });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
     }
 
     // POST /api/whatsapp/disconnect

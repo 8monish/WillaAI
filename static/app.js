@@ -148,10 +148,53 @@ const els = {
     terminalCmdInput: $('terminal-cmd-input'),
     termCloseBtn: $('term-close-btn'),
     termClearBtn: $('term-clear-btn'),
-    termCwdDisplay: $('term-cwd-display')
+    termCwdDisplay: $('term-cwd-display'),
+
+    // Multi-View Navigation Tabs & Views
+    tabTerminalBtn: $('tab-terminal-btn'),
+    tabWhatsappBtn: $('tab-whatsapp-btn'),
+    tabWizardBtn: $('tab-wizard-btn'),
+    tabWaDot: $('tab-wa-dot'),
+    viewTerminal: $('view-terminal'),
+    viewWhatsappHub: $('view-whatsapp-hub'),
+    viewWhatsappWizard: $('view-whatsapp-wizard'),
+    directWaWizardBtn: $('direct-wa-wizard-btn'),
+
+    // Wizard Stepper & Pages
+    stepNav1: $('step-nav-1'),
+    stepNav2: $('step-nav-2'),
+    stepNav3: $('step-nav-3'),
+    stepNav4: $('step-nav-4'),
+    wizardStep1: $('wizard-step-1'),
+    wizardStep2: $('wizard-step-2'),
+    wizardStep3: $('wizard-step-3'),
+    wizardStep4: $('wizard-step-4'),
+    wizardQrImg: $('wizard-qr-img'),
+    wizardQrLoading: $('wizard-qr-loading'),
+    wizardQrStatus: $('wizard-qr-status'),
+    wizardRefreshQrBtn: $('wizard-refresh-qr-btn'),
+    wizardStep1NextBtn: $('wizard-step1-next-btn'),
+    wizardStep2BackBtn: $('wizard-step2-back-btn'),
+    wizardStep2NextBtn: $('wizard-step2-next-btn'),
+    wizardPhoneInput: $('wizard-phone-input'),
+    wizardStep3BackBtn: $('wizard-step3-back-btn'),
+    wizardStep3NextBtn: $('wizard-step3-next-btn'),
+    wizardOpenHubBtn: $('wizard-open-hub-btn'),
+    wizardFinishBtn: $('wizard-finish-btn'),
+
+    // WhatsApp Hub
+    hubPingBtn: $('hub-ping-btn'),
+    hubOpenWizardBtn: $('hub-open-wizard-btn'),
+    hubPhoneDisplay: $('hub-phone-display'),
+    hubChangeNumberBtn: $('hub-change-number-btn'),
+    hubUnlinkBtn: $('hub-unlink-btn'),
+    hubGoChatBtn: $('hub-go-chat-btn')
 };
 
 let waPollInterval = null;
+let currentView = 'terminal';
+let currentWizardStep = 1;
+let prevWaStatus = null;
 let terminalHistory = [];
 let terminalHistoryIndex = -1;
 
@@ -167,6 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI();
     renderEmptyHero();
     loadMemoryPanel();
+
+    // Start background WhatsApp status polling
+    pollWhatsAppStatus();
+    setInterval(pollWhatsAppStatus, 3000);
 
     if (STATE.user) {
         updateUserProfileUI();
@@ -353,6 +400,66 @@ function bindEvents() {
 
     // Attachments
     bindAttachments();
+
+    // Multi-View Navigation Tabs
+    els.tabTerminalBtn?.addEventListener('click', () => switchView('terminal'));
+    els.tabWhatsappBtn?.addEventListener('click', () => switchView('whatsapp-hub'));
+    els.tabWizardBtn?.addEventListener('click', () => switchView('whatsapp-wizard'));
+
+    // Landing Screen Direct WhatsApp Setup
+    els.directWaWizardBtn?.addEventListener('click', () => {
+        if (!STATE.user) {
+            loginUser({
+                id: 'guest',
+                name: 'Terminal Guest',
+                email: 'guest@ripe.ai',
+                picture: '',
+                provider: 'guest'
+            });
+        }
+        goToWizardStep(1);
+        switchView('whatsapp-wizard');
+    });
+
+    // Wizard Stepper Indicator Clicks
+    [els.stepNav1, els.stepNav2, els.stepNav3, els.stepNav4].forEach((nav, idx) => {
+        nav?.addEventListener('click', () => {
+            goToWizardStep(idx + 1);
+        });
+    });
+
+    // Wizard Step 1 Controls
+    els.wizardRefreshQrBtn?.addEventListener('click', async () => {
+        showToast('Refreshing WhatsApp QR code...');
+        await handleStartWhatsApp(els.wizardPhoneInput?.value?.trim() || '');
+        pollWhatsAppStatus();
+    });
+    els.wizardStep1NextBtn?.addEventListener('click', () => goToWizardStep(2));
+
+    // Wizard Step 2 Controls
+    els.wizardStep2BackBtn?.addEventListener('click', () => goToWizardStep(1));
+    els.wizardStep2NextBtn?.addEventListener('click', () => goToWizardStep(3));
+
+    // Wizard Step 3 Controls
+    els.wizardStep3BackBtn?.addEventListener('click', () => goToWizardStep(2));
+    els.wizardStep3NextBtn?.addEventListener('click', handleWizardStep3Save);
+
+    // Wizard Step 4 Controls
+    els.wizardOpenHubBtn?.addEventListener('click', () => switchView('whatsapp-hub'));
+    els.wizardFinishBtn?.addEventListener('click', () => switchView('terminal'));
+
+    // WhatsApp Hub Actions
+    els.hubPingBtn?.addEventListener('click', handleHubPing);
+    els.hubOpenWizardBtn?.addEventListener('click', () => {
+        goToWizardStep(1);
+        switchView('whatsapp-wizard');
+    });
+    els.hubChangeNumberBtn?.addEventListener('click', () => {
+        goToWizardStep(3);
+        switchView('whatsapp-wizard');
+    });
+    els.hubUnlinkBtn?.addEventListener('click', handleHubUnlink);
+    els.hubGoChatBtn?.addEventListener('click', () => switchView('terminal'));
 }
 
 /* =============================================
@@ -538,7 +645,68 @@ function resetSettings() {
 }
 
 /* =============================================
-   WHATSAPP STATUS & SIDEBAR CONTROLS
+   MULTI-PAGE NAVIGATION & WIZARD CONTROLLER
+   ============================================= */
+function switchView(viewName) {
+    currentView = viewName;
+
+    const navTabs = [
+        { name: 'terminal', btn: els.tabTerminalBtn, view: els.viewTerminal },
+        { name: 'whatsapp-hub', btn: els.tabWhatsappBtn, view: els.viewWhatsappHub },
+        { name: 'whatsapp-wizard', btn: els.tabWizardBtn, view: els.viewWhatsappWizard }
+    ];
+
+    navTabs.forEach(t => {
+        if (t.name === viewName) {
+            t.btn?.classList.add('active');
+            t.view?.classList.remove('hidden');
+        } else {
+            t.btn?.classList.remove('active');
+            t.view?.classList.add('hidden');
+        }
+    });
+
+    if (viewName === 'whatsapp-hub' || viewName === 'whatsapp-wizard') {
+        pollWhatsAppStatus();
+    }
+}
+
+function goToWizardStep(stepNum) {
+    currentWizardStep = stepNum;
+
+    const stepNavs = [els.stepNav1, els.stepNav2, els.stepNav3, els.stepNav4];
+    const stepPanels = [els.wizardStep1, els.wizardStep2, els.wizardStep3, els.wizardStep4];
+
+    stepNavs.forEach((nav, idx) => {
+        const step = idx + 1;
+        if (!nav) return;
+        nav.classList.remove('active', 'completed');
+        if (step === stepNum) {
+            nav.classList.add('active');
+        } else if (step < stepNum) {
+            nav.classList.add('completed');
+        }
+    });
+
+    stepPanels.forEach((panel, idx) => {
+        const step = idx + 1;
+        if (!panel) return;
+        if (step === stepNum) {
+            panel.classList.remove('hidden');
+        } else {
+            panel.classList.add('hidden');
+        }
+    });
+
+    if (stepNum === 1) {
+        pollWhatsAppStatus();
+    } else if (stepNum === 3) {
+        setTimeout(() => els.wizardPhoneInput?.focus(), 100);
+    }
+}
+
+/* =============================================
+   WHATSAPP STATUS & MULTI-VIEW CONTROLS
    ============================================= */
 async function pollWhatsAppStatus() {
     try {
@@ -550,7 +718,73 @@ async function pollWhatsAppStatus() {
             ? (data.qr_base64.startsWith('data:') ? data.qr_base64 : `data:image/png;base64,${data.qr_base64}`)
             : '';
 
-        // 1. Update Settings Modal (if open)
+        // Auto-advance wizard if transition to connected occurred while on Step 1
+        if (prevWaStatus && prevWaStatus !== 'connected' && data.status === 'connected') {
+            if (currentWizardStep === 1) {
+                showToast('🎉 WhatsApp linked successfully!');
+                goToWizardStep(2);
+            }
+        }
+        prevWaStatus = data.status;
+
+        // 1. Update Top Nav Tab Dot
+        if (els.tabWaDot) {
+            if (data.status === 'connected') {
+                els.tabWaDot.style.background = '#10b981';
+                els.tabWaDot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.7)';
+                els.tabWaDot.title = 'WhatsApp Connected';
+            } else if (data.status === 'qr' || data.status === 'starting') {
+                els.tabWaDot.style.background = '#f59e0b';
+                els.tabWaDot.style.boxShadow = '0 0 8px rgba(245, 158, 11, 0.7)';
+                els.tabWaDot.title = 'WhatsApp Setup Required';
+            } else {
+                els.tabWaDot.style.background = 'var(--text-muted)';
+                els.tabWaDot.style.boxShadow = 'none';
+                els.tabWaDot.title = 'WhatsApp Disconnected';
+            }
+        }
+
+        // 2. Update WhatsApp Hub Page
+        if (els.hubPhoneDisplay) {
+            els.hubPhoneDisplay.textContent = data.owner_number ? `+${data.owner_number}` : 'Not Configured';
+        }
+
+        // 3. Update Multi-Step Wizard
+        if (els.wizardQrStatus) {
+            if (data.status === 'connected') {
+                els.wizardQrStatus.textContent = `🟢 WhatsApp Connected & Active (${data.owner_number ? '+' + data.owner_number : 'Linked'})`;
+                els.wizardQrStatus.style.color = '#10b981';
+                els.wizardQrLoading?.classList.add('hidden');
+                els.wizardQrImg?.classList.add('hidden');
+            } else if (data.status === 'qr' && qrSrc) {
+                els.wizardQrStatus.textContent = '🟡 Scan this code in WhatsApp > Linked Devices';
+                els.wizardQrStatus.style.color = '#f59e0b';
+                if (els.wizardQrImg) {
+                    els.wizardQrImg.src = qrSrc;
+                    els.wizardQrImg.classList.remove('hidden');
+                }
+                els.wizardQrLoading?.classList.add('hidden');
+            } else if (data.status === 'starting') {
+                els.wizardQrStatus.textContent = '⏳ Initializing WhatsApp Web browser...';
+                els.wizardQrStatus.style.color = '#3b82f6';
+                els.wizardQrImg?.classList.add('hidden');
+                if (els.wizardQrLoading) {
+                    els.wizardQrLoading.textContent = 'Generating pairing QR code...';
+                    els.wizardQrLoading.classList.remove('hidden');
+                }
+            } else {
+                els.wizardQrStatus.textContent = 'WhatsApp offline. Click Refresh to generate QR code.';
+                els.wizardQrStatus.style.color = 'var(--text-secondary)';
+                els.wizardQrImg?.classList.add('hidden');
+                els.wizardQrLoading?.classList.add('hidden');
+            }
+        }
+
+        if (data.owner_number && els.wizardPhoneInput && !els.wizardPhoneInput.value) {
+            els.wizardPhoneInput.value = data.owner_number;
+        }
+
+        // 4. Update Settings Modal (if open)
         if (els.waStatusText) {
             if (data.status === 'connected') {
                 els.waStatusText.textContent = `Linked to ${data.owner_number ? '+' + data.owner_number : 'Device'}`;
@@ -576,7 +810,7 @@ async function pollWhatsAppStatus() {
             }
         }
 
-        // 2. Update Sidebar Controls
+        // 5. Update Sidebar Controls
         if (els.sidebarWaBadge) {
             if (data.status === 'connected') {
                 if (els.sidebarWaDot) els.sidebarWaDot.style.background = '#10b981';
@@ -652,6 +886,86 @@ async function handleDisconnectWhatsApp() {
         showToast('Failed to disconnect WhatsApp.');
         console.error(e);
     }
+}
+
+async function handleWizardStep3Save() {
+    const rawNumber = els.wizardPhoneInput?.value?.trim() || '';
+    const cleanNumber = rawNumber.replace(/\D/g, '');
+    if (!cleanNumber || cleanNumber.length < 8) {
+        showToast('Please enter your WhatsApp phone number with country code (e.g. 919363936963).');
+        els.wizardPhoneInput?.focus();
+        return;
+    }
+
+    if (els.wizardStep3NextBtn) {
+        els.wizardStep3NextBtn.disabled = true;
+        els.wizardStep3NextBtn.textContent = 'Saving & Sending Handshake...';
+    }
+
+    try {
+        // Save owner number to backend
+        await fetch('/api/whatsapp/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ owner_number: cleanNumber })
+        });
+
+        // Trigger ping handshake test
+        const pingRes = await fetch('/api/whatsapp/ping', { method: 'POST' });
+        const pingData = await pingRes.json().catch(() => ({}));
+
+        if (pingData.success) {
+            showToast(`✅ Handshake message sent to +${cleanNumber}!`);
+        } else {
+            showToast(`Controller number set to +${cleanNumber}.`);
+        }
+
+        if (els.hubPhoneDisplay) {
+            els.hubPhoneDisplay.textContent = `+${cleanNumber}`;
+        }
+
+        goToWizardStep(4);
+    } catch (err) {
+        showToast('Error saving number: ' + err.message);
+    } finally {
+        if (els.wizardStep3NextBtn) {
+            els.wizardStep3NextBtn.disabled = false;
+            els.wizardStep3NextBtn.textContent = 'Save Number & Send Handshake Test →';
+        }
+        pollWhatsAppStatus();
+    }
+}
+
+async function handleHubPing() {
+    if (els.hubPingBtn) {
+        els.hubPingBtn.disabled = true;
+        els.hubPingBtn.textContent = 'Sending Ping...';
+    }
+    try {
+        const res = await fetch('/api/whatsapp/ping', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Ping handshake sent to your WhatsApp DM!');
+        } else {
+            showToast('Ping response: ' + (data.message || 'WhatsApp not ready yet'));
+        }
+    } catch (e) {
+        showToast('Failed to ping WhatsApp: ' + e.message);
+    } finally {
+        if (els.hubPingBtn) {
+            els.hubPingBtn.disabled = false;
+            els.hubPingBtn.textContent = '🔔 Ping My WhatsApp';
+        }
+    }
+}
+
+async function handleHubUnlink() {
+    if (!confirm('Are you sure you want to disconnect WhatsApp? You will need to re-scan the QR code to connect again.')) {
+        return;
+    }
+    await handleDisconnectWhatsApp();
+    goToWizardStep(1);
+    switchView('whatsapp-wizard');
 }
 
 els.sidebarWaLinkBtn?.addEventListener('click', () => {
@@ -793,25 +1107,25 @@ function renderEmptyHero() {
     if (STATE.history.length === 0) {
         els.messages.innerHTML = `
             <div class="empty-state-hero" id="empty-state-hero">
-                <div class="hero-icon-bubble"><img src="/static/ripeai-mark.svg" alt=""></div>
-                <h2 class="hero-heading">RipeAI System Terminal</h2>
-                <p class="hero-subtext">Your local system workspace, ready for questions, commands, and automation.</p>
+                <div class="hero-icon-bubble"><img src="/static/ripeai-mark.svg" alt="RipeAI"></div>
+                <h2 class="hero-heading">RipeAI Assistant</h2>
+                <p class="hero-subtext">Local AI pair programmer, autonomous orchestrator, and WhatsApp remote bridge.</p>
                 <div class="quick-prompts-grid">
+                    <div class="quick-prompt-card" data-prompt="Explain the project structure and suggest improvements">
+                        <span class="prompt-card-title">${uiIcon('files')} Codebase Architecture</span>
+                        <span class="prompt-card-desc">Inspect project tree & design patterns</span>
+                    </div>
+                    <div class="quick-prompt-card" data-prompt="What is the status of the WhatsApp remote assistant and authorized number?">
+                        <span class="prompt-card-title">${uiIcon('system')} WhatsApp Remote</span>
+                        <span class="prompt-card-desc">Verify phone pairing & remote agent bridge</span>
+                    </div>
                     <div class="quick-prompt-card" data-prompt="Check CPU, memory, and disk usage on this machine">
                         <span class="prompt-card-title">${uiIcon('resources')} System Resources</span>
                         <span class="prompt-card-desc">Check CPU, RAM & disk health</span>
                     </div>
-                    <div class="quick-prompt-card" data-prompt="Show kernel version, Linux distro, and system uptime">
-                        <span class="prompt-card-title">${uiIcon('system')} OS & Kernel</span>
-                        <span class="prompt-card-desc">Display distro, kernel & uptime</span>
-                    </div>
-                    <div class="quick-prompt-card" data-prompt="List files in current project and inspect git status">
-                        <span class="prompt-card-title">${uiIcon('files')} Workspace Files</span>
-                        <span class="prompt-card-desc">Inspect project tree & git changes</span>
-                    </div>
-                    <div class="quick-prompt-card" data-prompt="Show top 10 memory-consuming processes">
-                        <span class="prompt-card-title">${uiIcon('processes')} Process Monitor</span>
-                        <span class="prompt-card-desc">Monitor heavy active processes</span>
+                    <div class="quick-prompt-card" data-prompt="Show available system tools and autonomous agent capabilities">
+                        <span class="prompt-card-title">${uiIcon('processes')} Agent Capabilities</span>
+                        <span class="prompt-card-desc">Explore tools, shell, and automation</span>
                     </div>
                 </div>
             </div>
