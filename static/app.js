@@ -211,9 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderEmptyHero();
     loadMemoryPanel();
 
-    // Start background WhatsApp status polling
+    // Start background WhatsApp status polling and real-time remote event listener
     pollWhatsAppStatus();
     setInterval(pollWhatsAppStatus, 3000);
+    initSSEListener();
 
     if (STATE.user) {
         updateUserProfileUI();
@@ -1142,15 +1143,30 @@ function renderEmptyHero() {
     }
 }
 
-function addUserMessage(text) {
+function addUserMessage(text, options = {}) {
     hideEmptyHero();
     const div = document.createElement('div');
     div.className = 'message user-message';
+    
+    let waBadge = '';
+    if (options.fromWhatsApp) {
+        const senderDisplay = options.sender ? `+${options.sender}` : 'Authorized DM';
+        waBadge = `
+            <div class="wa-source-pill" title="Triggered from WhatsApp DM">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2Z"/>
+                </svg>
+                <span>WhatsApp • ${escapeHtml(senderDisplay)}</span>
+            </div>
+        `;
+    }
+
     div.innerHTML = `
         <div class="msg-content-wrap">
+            ${waBadge}
             <div class="msg-bubble">${escapeHtml(text)}</div>
         </div>
-        <div class="msg-avatar">U</div>
+        <div class="msg-avatar">${options.fromWhatsApp ? '📱' : 'U'}</div>
     `;
     els.messages.appendChild(div);
     scrollBottom();
@@ -1499,6 +1515,8 @@ async function sendMessage() {
 
         if (streamedContent) {
             STATE.history.push({ role: 'assistant', content: streamedContent });
+            // Two-way sync: mirror web UI prompt and AI output to owner's WhatsApp!
+            syncWebPromptToWhatsApp(text, streamedContent);
         }
 
     } catch (err) {
@@ -1512,5 +1530,223 @@ async function sendMessage() {
         abortController = null;
         setSending(false);
         els.userInput.focus();
+    }
+}
+
+/* =============================================
+   WHATSAPP REMOTE REAL-TIME PROMPT DISPATCHER
+   ============================================= */
+const remotePromptQueue = [];
+let isProcessingRemotePrompt = false;
+
+async function syncWebPromptToWhatsApp(userPrompt, aiResponse) {
+    if (!userPrompt || !aiResponse) return;
+    try {
+        const payloadText = `💻 *[Web Terminal Prompt]:*\n${userPrompt}\n\n🤖 *[AI Response]:*\n${aiResponse}`;
+        await fetch('/api/whatsapp/notify-owner', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: payloadText })
+        });
+    } catch (_) {}
+}
+
+function initSSEListener() {
+    if (window.__ripeAiSSE) {
+        try { window.__ripeAiSSE.close(); } catch (_) {}
+    }
+    const es = new EventSource('/api/chat/events');
+    window.__ripeAiSSE = es;
+
+    es.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'whatsapp_prompt') {
+                console.log('[RipeAI] Received incoming WhatsApp prompt:', data);
+                queueIncomingWhatsAppPrompt(data);
+            }
+        } catch (_) {}
+    };
+
+    es.onerror = () => {
+        // EventSource handles reconnection automatically
+    };
+}
+
+function queueIncomingWhatsAppPrompt(data) {
+    remotePromptQueue.push(data);
+    processRemotePromptQueue();
+}
+
+async function processRemotePromptQueue() {
+    if (isProcessingRemotePrompt || remotePromptQueue.length === 0) return;
+
+    // If standard user prompt is currently executing, wait a brief moment
+    if (els.sendBtn && els.sendBtn.classList.contains('hidden')) {
+        setTimeout(processRemotePromptQueue, 500);
+        return;
+    }
+
+    isProcessingRemotePrompt = true;
+    const item = remotePromptQueue.shift();
+
+    try {
+        await executeIncomingPrompt(item.prompt, item.sender, item.id);
+    } catch (err) {
+        console.error('Error executing incoming WhatsApp prompt:', err);
+        try {
+            await fetch('/api/whatsapp/resolve-prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: item.id,
+                    response: `⚠️ Error executing prompt on machine: ${err.message}`
+                })
+            });
+        } catch (_) {}
+    } finally {
+        isProcessingRemotePrompt = false;
+        if (remotePromptQueue.length > 0) {
+            setTimeout(processRemotePromptQueue, 300);
+        }
+    }
+}
+
+async function executeIncomingPrompt(text, sender, messageId) {
+    if (!text) return;
+
+    // Provide visual typing/prompt preview in input box before executing
+    if (els.userInput) {
+        els.userInput.value = text;
+        setTimeout(() => {
+            if (els.userInput && els.userInput.value === text) {
+                els.userInput.value = '';
+                els.userInput.style.height = 'auto';
+            }
+        }, 800);
+    }
+
+    // Add user message to chat stream with WhatsApp badge
+    hideEmptyHero();
+    addUserMessage(text, { fromWhatsApp: true, sender: sender });
+    STATE.history.push({ role: 'user', content: text });
+
+    abortController = new AbortController();
+    setSending(true);
+    showThinking(`Running ${STATE.modelName} (from WhatsApp DM)...`);
+    activeAiBubble = null;
+
+    let streamedContent = '';
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: STATE.history,
+                engine: STATE.engine,
+                model: STATE.modelId
+            }),
+            signal: abortController.signal
+        });
+
+        if (!response.ok) {
+            let errMsg = `Server error (${response.status}).`;
+            try {
+                const data = await response.json();
+                errMsg = data.detail || errMsg;
+            } catch (_) {}
+            removeThinking();
+            addErrorMessage(errMsg);
+            setSending(false);
+
+            await fetch('/api/whatsapp/resolve-prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: messageId,
+                    response: `⚠️ Error: ${errMsg}`
+                })
+            });
+            return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                let data;
+                try { data = JSON.parse(line); } catch (_) { continue; }
+
+                if (data.type === 'status') {
+                    showThinking(data.message || 'Executing your request...');
+                } else if (data.type === 'delta') {
+                    removeThinking();
+                    streamedContent += data.content;
+                    updateStreamingAiMessage(streamedContent);
+                } else if (data.type === 'action') {
+                    removeThinking();
+                    if (STATE.safeMode && DANGEROUS_PATTERNS.some(p => p.test(data.command))) {
+                        addErrorMessage(`Safe Mode blocked dangerous action: \`${data.command}\``);
+                        break;
+                    }
+                    addActionMessage(data.command, data.tool);
+                } else if (data.type === 'action_result') {
+                    if (STATE.showOutput) addResultMessage(data.output);
+                    showThinking('Processing output...');
+                } else if (data.type === 'memories_saved') {
+                    addMemorySavedMsg(data.memories);
+                } else if (data.type === 'final') {
+                    removeThinking();
+                    if (!streamedContent) {
+                        updateStreamingAiMessage(data.content);
+                        streamedContent = data.content;
+                    }
+                } else if (data.type === 'error') {
+                    removeThinking();
+                    addErrorMessage(data.message);
+                }
+            }
+        }
+
+        if (streamedContent) {
+            STATE.history.push({ role: 'assistant', content: streamedContent });
+        }
+
+        // Deliver final generated response back to the WhatsApp conversation
+        await fetch('/api/whatsapp/resolve-prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: messageId,
+                response: streamedContent || "Task completed."
+            })
+        });
+
+    } catch (err) {
+        removeThinking();
+        addErrorMessage(`Execution error: ${err.message}.`);
+        await fetch('/api/whatsapp/resolve-prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: messageId,
+                response: `⚠️ Error executing request: ${err.message}`
+            })
+        });
+    } finally {
+        abortController = null;
+        setSending(false);
+        scrollBottom();
     }
 }
