@@ -4,7 +4,7 @@ const QRCode = require('qrcode');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
-const { config, evaluateMessage, cleanPhoneNumber } = require('../config/config');
+const { config, evaluateMessage, cleanPhoneNumber, parseOwnerNumbers, isOwnerMatch } = require('../config/config');
 const { generateAIResponse } = require('./ai');
 const { 
   executeDirectCommand, 
@@ -21,6 +21,63 @@ let waStatus = 'disconnected'; // 'disconnected' | 'starting' | 'qr' | 'connecte
 let qrBase64 = '';
 const processedMessageIds = new Set();
 const botSentMessageIds = new Set();
+const recentBotSentTexts = new Map();
+const recentIncomingPrompts = new Map();
+
+function getMessageUniqueId(msg) {
+  if (!msg) return `wa_${Date.now()}`;
+  if (typeof msg.id === 'string' && msg.id.length > 0) return msg.id;
+  if (msg.id?._serialized) return msg.id._serialized;
+  if (msg.id?.id) return `${msg.from || ''}_${msg.id.id}`;
+  if (msg._data?.id?._serialized) return msg._data.id._serialized;
+  if (msg._data?.id?.id) return `${msg.from || ''}_${msg._data.id.id}`;
+  const sender = msg.author || msg.from || 'unknown';
+  const ts = msg.timestamp || '';
+  const bodySample = (msg.body || '').trim().substring(0, 30);
+  return `wa_${sender}_${ts}_${bodySample}`;
+}
+
+function normalizeForEchoCheck(text) {
+  if (!text) return '';
+  return String(text)
+    .trim()
+    .toLowerCase()
+    .replace(/^🤖\s*\*?ripeai:?\*?\s*/i, '')
+    .replace(/^[💻🔔🚀👋⚠️]\s*/, '')
+    .replace(/\s+/g, ' ');
+}
+
+function registerPendingBotMessage(text) {
+  if (!text) return;
+  const normalized = normalizeForEchoCheck(text);
+  if (normalized.length > 0) {
+    recentBotSentTexts.set(normalized, Date.now() + 180000); // 3-minute TTL
+  }
+  const rawClean = String(text).trim().toLowerCase().replace(/\s+/g, ' ');
+  if (rawClean.length > 0) {
+    recentBotSentTexts.set(rawClean, Date.now() + 180000);
+  }
+  // Prune expired entries
+  const now = Date.now();
+  for (const [k, exp] of recentBotSentTexts.entries()) {
+    if (exp < now) recentBotSentTexts.delete(k);
+  }
+}
+
+function isRecentBotMessage(text) {
+  if (!text) return false;
+  const normalized = normalizeForEchoCheck(text);
+  const rawClean = String(text).trim().toLowerCase().replace(/\s+/g, ' ');
+  const now = Date.now();
+  for (const [k, exp] of recentBotSentTexts.entries()) {
+    if (exp >= now) {
+      if (k === normalized || k === rawClean) return true;
+      if (normalized.length > 15 && (k.startsWith(normalized) || normalized.startsWith(k))) return true;
+      if (rawClean.length > 15 && (k.startsWith(rawClean) || rawClean.startsWith(k))) return true;
+    }
+  }
+  return false;
+}
 
 function getWaStatus() {
   return waStatus;
@@ -31,10 +88,30 @@ function getQrBase64() {
 }
 
 function setOwnerNumber(rawNumber) {
-  const cleaned = cleanPhoneNumber(rawNumber);
-  config.owner.phoneNumber = cleaned;
-  logger.info(`Owner phone number set to: +${cleaned}`);
-  return cleaned;
+  if (!rawNumber) return '';
+  const numbers = parseOwnerNumbers(rawNumber);
+  const normalized = numbers.join(',');
+  config.owner.phoneNumber = normalized;
+  logger.info(`Owner phone number set to: ${numbers.map((n) => '+' + n).join(', ')}`);
+
+  // Persist to whatsapp-bot/.env so changes survive restarts
+  try {
+    const envPath = path.resolve(__dirname, '../../.env');
+    if (fs.existsSync(envPath)) {
+      let content = fs.readFileSync(envPath, 'utf8');
+      if (content.includes('OWNER_PHONE_NUMBER=')) {
+        content = content.replace(/OWNER_PHONE_NUMBER=.*/g, `OWNER_PHONE_NUMBER=${normalized}`);
+      } else {
+        content += `\nOWNER_PHONE_NUMBER=${normalized}\n`;
+      }
+      fs.writeFileSync(envPath, content, 'utf8');
+      logger.info(`Persisted OWNER_PHONE_NUMBER=${normalized} to .env`);
+    }
+  } catch (err) {
+    logger.warn('Could not write OWNER_PHONE_NUMBER to .env:', err.message);
+  }
+
+  return normalized;
 }
 
 function buildWelcomeMessage() {
@@ -69,24 +146,37 @@ function buildHelpMessage() {
  */
 async function sendGreetingToOwner() {
   if (!client || !isReady) return;
-  const ownerNumber = config.owner.phoneNumber;
-  if (!ownerNumber) {
-    logger.warn('No OWNER_PHONE_NUMBER set. Waiting for your first WhatsApp message to pair automatically.');
+  
+  const connectedNumber = cleanPhoneNumber(client?.info?.wid?.user);
+  const owners = parseOwnerNumbers(config.owner.phoneNumber);
+  
+  const targets = new Set();
+  if (connectedNumber) targets.add(connectedNumber);
+  for (const num of owners) {
+    if (num) targets.add(num);
+  }
+
+  if (targets.size === 0) {
+    logger.warn('No OWNER_PHONE_NUMBER set and no linked number. Waiting for your first WhatsApp message to pair automatically.');
     return;
   }
 
-  const ownerJid = `${ownerNumber}@c.us`;
-  logger.info(`Sending proactive welcome handshake message to owner [${ownerJid}]...`);
-  
-  try {
-    const sent = await client.sendMessage(ownerJid, buildWelcomeMessage());
-    if (sent?.id?._serialized) {
-      botSentMessageIds.add(sent.id._serialized);
-      processedMessageIds.add(sent.id._serialized);
+  for (const targetNumber of targets) {
+    const ownerJid = `${targetNumber}@c.us`;
+    logger.info(`Sending proactive welcome handshake message to owner [${ownerJid}]...`);
+    
+    try {
+      const greeting = buildWelcomeMessage();
+      registerPendingBotMessage(greeting);
+      const sent = await client.sendMessage(ownerJid, greeting);
+      if (sent?.id?._serialized) {
+        botSentMessageIds.add(sent.id._serialized);
+        processedMessageIds.add(sent.id._serialized);
+      }
+      logger.success(`Greeting successfully sent to +${targetNumber}!`);
+    } catch (err) {
+      logger.error(`Failed to send proactive greeting to +${targetNumber}:`, err);
     }
-    logger.success(`Greeting successfully sent to ${ownerNumber}!`);
-  } catch (err) {
-    logger.error(`Failed to send proactive greeting to ${ownerNumber}:`, err);
   }
 }
 
@@ -172,10 +262,22 @@ function initializeWhatsAppClient() {
     isReady = true;
     waStatus = 'connected';
     qrBase64 = '';
-    logger.success('WhatsApp client is authenticated and actively listening for messages!');
     
+    const linkedNumber = cleanPhoneNumber(client?.info?.wid?.user || '');
+    logger.success(`WhatsApp client is authenticated and actively listening! Linked account: +${linkedNumber}`);
+
+    // If config.owner.phoneNumber is empty, auto-bind the connected number!
+    if (!config.owner.phoneNumber && linkedNumber) {
+      setOwnerNumber(linkedNumber);
+    }
+    // If the linked number is not in the owners list, dynamically add it
+    else if (linkedNumber && !isOwnerMatch(linkedNumber, config.owner.phoneNumber, client)) {
+      const updated = config.owner.phoneNumber ? `${config.owner.phoneNumber},${linkedNumber}` : linkedNumber;
+      setOwnerNumber(updated);
+    }
+
     const ownerNotice = config.owner.phoneNumber 
-      ? `Locked to: +${config.owner.phoneNumber}` 
+      ? `Locked to: ${parseOwnerNumbers(config.owner.phoneNumber).map((n) => '+' + n).join(', ')}` 
       : 'Waiting to auto-pair with first sender';
 
     const engineNotice = config.aiEngine === 'agy' 
@@ -183,14 +285,15 @@ function initializeWhatsAppClient() {
       : `OpenAI API (${config.openai.model})`;
 
     logger.banner('RipeAI WhatsApp Remote Control Active', [
-      `Owner DM: ${ownerNotice}`,
+      `Linked Phone: +${linkedNumber || 'Unknown'}`,
+      `Owner DM(s): ${ownerNotice}`,
       `AI Engine: ${engineNotice}`,
       `Workspace: ${getCwd()}`,
       `Session Path: ${config.session.dataPath}`,
     ]);
 
     // Send proactive greeting to the owner
-    if (config.owner.sendGreetingOnReady && config.owner.phoneNumber) {
+    if (config.owner.sendGreetingOnReady) {
       setTimeout(() => {
         sendGreetingToOwner().catch((e) => logger.error('Greeting error:', e));
       }, 2000);
@@ -242,14 +345,14 @@ function initializeWhatsAppClient() {
     try {
       if (!msg) return;
 
-      const msgId = msg.id?._serialized || `wa_${Date.now()}`;
+      const msgId = getMessageUniqueId(msg);
 
       // Prevent processing the same message twice
       if (processedMessageIds.has(msgId)) {
         return;
       }
       processedMessageIds.add(msgId);
-      if (processedMessageIds.size > 500) {
+      if (processedMessageIds.size > 1000) {
         const first = processedMessageIds.values().next().value;
         processedMessageIds.delete(first);
       }
@@ -261,18 +364,32 @@ function initializeWhatsAppClient() {
 
       const body = (msg.body || '').trim();
 
-      // Guard against bot echo
+      // Guard against bot echo / automated outgoing notices
       if (
         body.startsWith('🤖') ||
-        body.startsWith('💻 *[Web') ||
-        body.startsWith('🔔 *RipeAI') ||
+        body.startsWith('💻') ||
+        body.startsWith('🔔') ||
+        body.startsWith('🚀') ||
+        body.startsWith('👋') ||
         body.startsWith('Executed:\n```') ||
-        body.startsWith('⚠️ *Error:*')
+        body.startsWith('⚠️') ||
+        body.includes('*RipeAI:*') ||
+        body.includes('[AI Response]') ||
+        body.includes('[RipeAI Response]') ||
+        body.includes('[Web Terminal Prompt]') ||
+        body.includes('Hi! RipeAI is online and connected') ||
+        body.includes('RipeAI WhatsApp Remote Control Commands:')
       ) {
         return;
       }
 
-      const evalResult = evaluateMessage(msg, client);
+      // Guard against recently sent bot texts (Content Fingerprint match)
+      if (isRecentBotMessage(body)) {
+        logger.info(`[Bot Echo Guard] Suppressed outgoing bot reply echo: "${body.substring(0, 40)}..."`);
+        return;
+      }
+
+      const evalResult = await evaluateMessage(msg, client);
       logger.info(`[WhatsApp Eval] fromMe=${msg.fromMe} id=${msgId} from=${msg.from} to=${msg.to} shouldProcess=${evalResult.shouldProcess} reason=${evalResult.reason || 'OK'}`);
 
       if (!evalResult.shouldProcess) {
@@ -280,6 +397,18 @@ function initializeWhatsAppClient() {
       }
 
       const { senderNumber, prompt, isOwner } = evalResult;
+
+      // Deduplicate rapid identical prompts from same sender within 3.5s window
+      const promptDedupeKey = `${senderNumber}:${(prompt || '').trim().toLowerCase()}`;
+      const now = Date.now();
+      if (recentIncomingPrompts.has(promptDedupeKey) && recentIncomingPrompts.get(promptDedupeKey) > now) {
+        logger.info(`[Deduplication Guard] Suppressed duplicate prompt within 3.5s: "${prompt.substring(0, 30)}..."`);
+        return;
+      }
+      recentIncomingPrompts.set(promptDedupeKey, now + 3500);
+      for (const [k, exp] of recentIncomingPrompts.entries()) {
+        if (exp < now) recentIncomingPrompts.delete(k);
+      }
 
       logger.chat('IN', senderNumber, body);
 
@@ -327,8 +456,15 @@ function initializeWhatsAppClient() {
         }
       }
 
-      // Format clean WhatsApp markdown and reply
-      const formattedResponse = formatForWhatsApp(responseText);
+      // Format clean WhatsApp markdown and prefix with distinct RipeAI marker
+      const formattedBody = formatForWhatsApp(responseText);
+      const formattedResponse = `🤖 *RipeAI:*\n${formattedBody}`;
+
+      // Pre-register texts in fingerprint cache BEFORE sending to avoid event race
+      registerPendingBotMessage(formattedResponse);
+      registerPendingBotMessage(formattedBody);
+      registerPendingBotMessage(responseText);
+
       let replySent;
       try {
         if (chat) {
@@ -343,6 +479,7 @@ function initializeWhatsAppClient() {
 
       if (replySent?.id?._serialized) {
         botSentMessageIds.add(replySent.id._serialized);
+        processedMessageIds.add(replySent.id._serialized);
       }
       logger.chat('OUT', senderNumber, formattedResponse);
 
@@ -360,11 +497,9 @@ function initializeWhatsAppClient() {
     }
   };
 
-  // Listen to both incoming and created messages with deduplication
-  client.on('message', (msg) => {
-    processIncomingMessage(msg).catch((err) => logger.error('Error in message listener:', err));
-  });
-
+  // Listen ONLY to 'message_create' because in whatsapp-web.js, 'message_create' fires
+  // for ALL messages (both incoming from others AND outgoing from self).
+  // Listening to both 'message' and 'message_create' causes duplicate handling!
   client.on('message_create', (msg) => {
     processIncomingMessage(msg).catch((err) => logger.error('Error in message_create listener:', err));
   });
@@ -400,12 +535,17 @@ async function stopWhatsAppClient() {
     logger.info('Shutting down WhatsApp Web client...');
     try {
       await client.destroy();
-      client = null;
-      logger.success('WhatsApp Web client closed cleanly.');
     } catch (err) {
       logger.error('Error during client destruction:', err);
     }
+    client = null;
+    logger.success('WhatsApp Web client closed cleanly.');
   }
+  // Release any lingering headless Chrome instances attached to session directory
+  try {
+    const { execSync } = require('child_process');
+    execSync('pkill -9 -f "whatsapp-bot/.wweb_auth" || true');
+  } catch (_) {}
 }
 
 module.exports = {
@@ -415,6 +555,7 @@ module.exports = {
   getWaStatus,
   getQrBase64,
   setOwnerNumber,
+  registerPendingBotMessage,
   recordBotSentMessageId: (msgId) => { if (msgId) botSentMessageIds.add(msgId); },
   getClient: () => client,
   isClientReady: () => isReady,

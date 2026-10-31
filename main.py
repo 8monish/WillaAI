@@ -1,3 +1,4 @@
+import time
 import os
 import json
 import re
@@ -754,6 +755,12 @@ async def on_shutdown():
 async def get_chat_history():
     return JSONResponse(conversation_history)
 
+@app.post("/api/chat/clear")
+async def clear_chat_history():
+    conversation_history.clear()
+    await broadcast_event({"type": "clear_chat"})
+    return JSONResponse({"status": "cleared"})
+
 @app.get("/api/chat/events")
 async def chat_events_stream(request: Request):
     queue = asyncio.Queue()
@@ -794,10 +801,34 @@ class WhatsAppPromptPayload(BaseModel):
     prompt: str
     message_id: str
 
+processed_incoming_message_ids: Set[str] = set()
+recent_incoming_prompt_timestamps: Dict[str, float] = {}
+
 @app.post("/api/whatsapp/incoming-prompt")
 async def handle_whatsapp_incoming_prompt(req: WhatsAppPromptPayload):
     prompt_text = req.prompt.strip()
     sender_number = req.sender
+    now = time.time()
+
+    # Deduplicate by unique message_id
+    if req.message_id and req.message_id in processed_incoming_message_ids:
+        return JSONResponse({"status": "duplicate", "response": ""})
+    if req.message_id:
+        processed_incoming_message_ids.add(req.message_id)
+        if len(processed_incoming_message_ids) > 1000:
+            processed_incoming_message_ids.pop()
+
+    # Deduplicate identical prompt from same sender within 4-second window
+    prompt_key = f"{sender_number}:{prompt_text.lower()}"
+    last_time = recent_incoming_prompt_timestamps.get(prompt_key, 0.0)
+    if (now - last_time) < 4.0:
+        return JSONResponse({"status": "duplicate", "response": ""})
+    recent_incoming_prompt_timestamps[prompt_key] = now
+
+    # Clean old timestamps
+    for k in list(recent_incoming_prompt_timestamps.keys()):
+        if now - recent_incoming_prompt_timestamps[k] > 60.0:
+            del recent_incoming_prompt_timestamps[k]
 
     # 1. Add user message to conversation history
     add_to_conversation_history(

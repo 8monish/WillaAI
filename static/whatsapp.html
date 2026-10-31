@@ -214,7 +214,7 @@
                     <span>Authorized Controller Phone</span>
                 </div>
                 <div style="font-size: 28px; font-weight: 800; color: var(--text-primary); margin: 4px 0 10px 0;" id="phone-display">
-                    +919363936963
+                    Loading...
                 </div>
                 <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">
                     <strong style="color: var(--accent-primary);">🔒 Strict Number Isolation:</strong> Only messages from this DM will run commands or generate completions. Messages from any other sender or group are silently discarded.
@@ -288,7 +288,7 @@
                 </div>
                 <div class="console-box" id="sim-console">
                     [System Ready] WhatsApp bridge listening on 127.0.0.1:8008.<br>
-                    [Security Policy] Active controller number: +919363936963.<br>
+                    [Security Policy] Active controller phone connected.<br>
                     Click "Ping My WhatsApp" above or send a command from your phone to start remote interaction.
                 </div>
             </div>
@@ -380,7 +380,8 @@
         }
 
         async function promptChangeNumber() {
-            const num = prompt('Enter new authorized WhatsApp phone number with country code (e.g. 919363936963):', '919363936963');
+            const currentNum = document.getElementById('phone-display')?.textContent?.replace(/\D/g, '') || '';
+            const num = prompt('Enter new authorized WhatsApp phone number with country code (e.g. 919361430509):', currentNum);
             if (!num) return;
             const clean = num.replace(/\D/g, '');
             if (clean.length < 8) {

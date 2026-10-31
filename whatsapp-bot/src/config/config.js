@@ -20,12 +20,35 @@ const cleanPhoneNumber = (raw) => {
   return withoutDevice.replace(/\D/g, '');
 };
 
-const isOwnerMatch = (candidate, ownerNum) => {
-  if (!candidate || !ownerNum) return false;
-  const c = cleanPhoneNumber(candidate);
-  const o = cleanPhoneNumber(ownerNum);
-  if (!c || !o) return false;
-  return c === o || c.endsWith(o) || o.endsWith(c);
+const parseOwnerNumbers = (raw) => {
+  if (!raw) return [];
+  return String(raw)
+    .split(',')
+    .map((s) => cleanPhoneNumber(s))
+    .filter(Boolean);
+};
+
+const isOwnerMatch = (candidate, ownerConfig, client = null) => {
+  if (!candidate) return false;
+  const candidates = (Array.isArray(candidate) ? candidate : [candidate])
+    .map((c) => cleanPhoneNumber(c))
+    .filter(Boolean);
+
+  if (candidates.length === 0) return false;
+
+  const owners = parseOwnerNumbers(ownerConfig);
+
+  // The account currently authenticated in WhatsApp Web is always an authorized owner
+  if (client?.info?.wid?.user) {
+    const linkedNum = cleanPhoneNumber(client.info.wid.user);
+    if (linkedNum && !owners.includes(linkedNum)) {
+      owners.push(linkedNum);
+    }
+  }
+
+  return candidates.some((c) =>
+    owners.some((o) => c === o || c.endsWith(o) || o.endsWith(c))
+  );
 };
 
 const parseAllowedSenders = (raw) => {
@@ -66,8 +89,8 @@ const detectChromeExecutable = () => {
 const config = {
   // Remote System & Owner Configuration
   owner: {
-    // Specific phone number to control this system from (digits only, e.g. 919876543210)
-    phoneNumber: cleanPhoneNumber(process.env.OWNER_PHONE_NUMBER || process.env.TARGET_PHONE_NUMBER || ''),
+    // Specific phone number or comma-separated numbers (e.g. 919361430509,919363936963)
+    phoneNumber: (process.env.OWNER_PHONE_NUMBER || process.env.TARGET_PHONE_NUMBER || '').trim(),
     // Automatically bind the first number that messages the bot if no OWNER_PHONE_NUMBER is set
     autoBindFirstSender: parseBoolean(process.env.AUTO_BIND_OWNER, true),
     // Send welcome greeting upon connection
@@ -124,9 +147,10 @@ const config = {
 /**
  * Check whether a message should be processed according to access control and trigger rules
  * @param {import('whatsapp-web.js').Message} msg 
- * @returns {{ shouldProcess: boolean, isOwner: boolean, senderNumber: string, prompt: string, reason?: string }}
+ * @param {import('whatsapp-web.js').Client} [client]
+ * @returns {Promise<{ shouldProcess: boolean, isOwner: boolean, senderNumber: string, prompt: string, reason?: string }>}
  */
-function evaluateMessage(msg, client = null) {
+async function evaluateMessage(msg, client = null) {
   // 1. Ignore status/broadcast updates
   if (msg.from === 'status@broadcast' || msg.to === 'status@broadcast') {
     return { shouldProcess: false, reason: 'status update' };
@@ -138,14 +162,39 @@ function evaluateMessage(msg, client = null) {
     return { shouldProcess: false, reason: 'group messages disabled' };
   }
 
-  const ownerPhone = cleanPhoneNumber(config.owner.phoneNumber);
-  const ownNumber = cleanPhoneNumber(client?.info?.wid?.user || ownerPhone);
+  const ownerConfig = config.owner.phoneNumber;
+  const ownNumber = cleanPhoneNumber(client?.info?.wid?.user || '');
 
   const rawSender = msg.author || msg.from || '';
   const rawRecipient = msg.to || '';
 
   let senderNumber = cleanPhoneNumber(rawSender);
   let isOwner = false;
+
+  // Collect candidate phone numbers for sender (resolves WhatsApp Multi-Device LIDs)
+  const candidateSenders = [];
+  if (senderNumber) candidateSenders.push(senderNumber);
+
+  // Attempt resolving contact object (whatsapp-web.js Contact structure)
+  if (typeof msg.getContact === 'function') {
+    try {
+      const contact = await msg.getContact();
+      if (contact) {
+        if (contact.number) candidateSenders.push(cleanPhoneNumber(contact.number));
+        if (contact.id?.user) candidateSenders.push(cleanPhoneNumber(contact.id.user));
+      }
+    } catch (_) {}
+  }
+
+  // Attempt resolving LID to PN via internal WhatsApp Web API if available
+  if (client && typeof client.getContactLidAndPhone === 'function' && String(rawSender).includes('@lid')) {
+    try {
+      const lidRes = await client.getContactLidAndPhone([rawSender]);
+      if (lidRes && lidRes[0] && lidRes[0].pn) {
+        candidateSenders.push(cleanPhoneNumber(lidRes[0].pn));
+      }
+    } catch (_) {}
+  }
 
   // 3. Check if message is from the linked account / owner
   if (msg.fromMe) {
@@ -164,10 +213,8 @@ function evaluateMessage(msg, client = null) {
     const isSelfChat = Boolean(
       (senderPrefix && recipientPrefix && senderPrefix === recipientPrefix) ||
       (ownWidPrefix && (senderPrefix === ownWidPrefix || recipientPrefix === ownWidPrefix)) ||
-      isOwnerMatch(rawRecipient, ownNumber) || 
-      isOwnerMatch(rawSender, ownNumber) || 
-      isOwnerMatch(rawRecipient, ownerPhone) ||
-      isOwnerMatch(rawSender, ownerPhone)
+      (ownNumber && (isOwnerMatch(rawRecipient, ownNumber, client) || isOwnerMatch(rawSender, ownNumber, client))) ||
+      (ownerConfig && (isOwnerMatch(rawRecipient, ownerConfig, client) || isOwnerMatch(rawSender, ownerConfig, client)))
     );
 
     // If message was sent to an external third party contact, do not intercept
@@ -176,18 +223,21 @@ function evaluateMessage(msg, client = null) {
     }
 
     isOwner = true;
-    senderNumber = ownerPhone || ownNumber || senderPrefix;
+    senderNumber = ownNumber || parseOwnerNumbers(ownerConfig)[0] || senderPrefix;
   } else {
-    // Message received from another WhatsApp account
-    if (ownerPhone) {
-      if (isOwnerMatch(senderNumber, ownerPhone)) {
+    // Message received from another WhatsApp account or phone
+    if (ownerConfig || ownNumber) {
+      if (isOwnerMatch(candidateSenders, ownerConfig, client)) {
         isOwner = true;
+        // Prefer real 10-13 digit phone number instead of internal 15-digit LID
+        const realPhone = candidateSenders.find(c => c && c.length <= 13 && c !== senderNumber);
+        if (realPhone) senderNumber = realPhone;
       } else {
         return { 
           shouldProcess: false, 
           isOwner: false, 
           senderNumber, 
-          reason: `unauthorized sender (${senderNumber} != owner ${ownerPhone})` 
+          reason: `unauthorized sender (${candidateSenders.join(', ')} not in authorized owners: ${ownerConfig || ownNumber})` 
         };
       }
     } else if (config.owner.autoBindFirstSender && !isGroup) {
@@ -198,7 +248,7 @@ function evaluateMessage(msg, client = null) {
 
   // 4. Allowed sender whitelist check (if configured)
   if (config.bot.allowedSenders && config.bot.allowedSenders.length > 0) {
-    const isAllowed = config.bot.allowedSenders.some(allowed => isOwnerMatch(senderNumber, allowed));
+    const isAllowed = config.bot.allowedSenders.some(allowed => isOwnerMatch(candidateSenders, allowed));
     if (!isAllowed) {
       return { shouldProcess: false, isOwner, senderNumber, reason: `sender ${senderNumber} not in whitelist` };
     }
@@ -227,5 +277,6 @@ module.exports = {
   config,
   evaluateMessage,
   cleanPhoneNumber,
+  parseOwnerNumbers,
   isOwnerMatch,
 };

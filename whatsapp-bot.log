@@ -1334,3 +1334,604 @@ Node.js v26.12.1
 [90m[11:15:35 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m 👋 *Hi! RipeAI is online and connected to your Linux machine.* 💻  🖥️ *Host:* `bish` (monish) 📂...
 [90m[11:15:35 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
 [90m[11:15:35 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:16:56 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793425616072 from=120363407968378350@g.us to=919363936963@c.us shouldProcess=false reason=group messages disabled
+[90m[11:16:56 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793425616083 from=120363407968378350@g.us to=919363936963@c.us shouldProcess=false reason=group messages disabled
+[90m[11:17:10 AM][0m [33m⚠ [WARN][0m Could not bridge prompt to main page (This operation was aborted). Using local execution fallback.
+[90m[11:17:10 AM][0m [36mℹ [INFO][0m [RipeAI Agent] Invoking agy CLI with model [gemini-3.8-flash-high] for prompt: "👋 *Hi! RipeAI is online and connected to your Linux machine.* 💻
+
+🖥️ *Host:* `..."
+[90m[11:17:18 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793425638775 from=120363407968378350@g.us to=919363936963@c.us shouldProcess=false reason=group messages disabled
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:17:29 AM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[11:17:29 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:17:29 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:17:29 AM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[11:17:54 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:17:54 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:17:56 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:17:57 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:18:17 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793425697256 from=260434468843692@lid to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:18:17 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m 🚀 *RipeAI Remote Bridge Ready!* Send any message or command here (e.g. `$ uptime`, `status`, or ...
+[90m[11:18:17 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:18:17 AM][0m [32m📤 [SENT][0m [1m919363936963:[0m 🚀 *RipeAI Remote Bridge Ready!* Send any message or command here (e.g. `$ uptime`, `status`, or ...
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:18:58 AM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[11:18:58 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:18:58 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:18:58 AM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[11:19:24 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:19:25 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:19:27 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:19:27 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:20:47 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793425847712 from=120363407968378350@g.us to=919363936963@c.us shouldProcess=false reason=group messages disabled
+[90m[11:20:47 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793425847713 from=120363407968378350@g.us to=919363936963@c.us shouldProcess=false reason=group messages disabled
+
+
+[90m[11:21:03 AM][0m [36mℹ [INFO][0m Received SIGINT. Shutting down gracefully...
+[90m[11:21:03 AM][0m [36mℹ [INFO][0m Shutting down WhatsApp Web client...
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:23:35 AM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[11:23:35 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:23:35 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:23:35 AM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[11:23:40 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:23:40 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:23:42 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:23:43 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:24:20 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793426060489 from=919363936963@c.us to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:24:20 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m hello]
+[90m[11:24:20 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:24:36 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793426076485 from=260434468843692@lid to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:24:36 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hello! How can I help you today with your project?
+[90m[11:24:36 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:24:36 AM][0m [32m📤 [SENT][0m [1m919363936963:[0m Hello! How can I help you today with your project?
+
+
+[90m[11:24:56 AM][0m [36mℹ [INFO][0m Received SIGINT. Shutting down gracefully...
+[90m[11:24:56 AM][0m [36mℹ [INFO][0m Shutting down WhatsApp Web client...
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:25:56 AM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[11:25:56 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:25:56 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:25:56 AM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[11:26:03 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:26:03 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:26:05 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:26:05 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:27:22 AM][0m [36mℹ [INFO][0m Shutting down WhatsApp Web client...
+[90m[11:27:22 AM][0m [32m✔ [SUCCESS][0m WhatsApp Web client closed cleanly.
+[90m[11:38:44 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:38:44 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:38:44 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:38:50 AM][0m [33m⚠ [WARN][0m Scan the QR code below using WhatsApp (Linked Devices) to authenticate:
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █▀ ▄▀ ▄ ▀▀▄ ▄▀     █▀▄ ▄█ ██▀█▄█ █▄▄█ ▄▄ ██ ▄▄▄▄▄ █
+█ █   █ █▀█ ▄▄ ███  ▄▄██  ▀█▄█▄▄ █▄ █▀▄ ▄▄▄  █ ▄ ██ █   █ █
+█ █▄▄▄█ █▀▀▄▀ ▀▀▄██ ▄ ▄█▀ █ ▄▄▄   ██▀▀▀▀ ▄▄  ▀▀▀▄██ █▄▄▄█ █
+█▄▄▄▄▄▄▄█▄▀▄█▄▀▄▀▄█ ▀ ▀ █ █ █▄█ ▀▄█ ▀▄▀ ▀▄█▄▀▄█▄▀▄█▄▄▄▄▄▄▄█
+█▄▄ ▄▄█▄  █ █▀ ▀▄█▄▄ ███▀▀▄▄▄   ▀█▀█▀▄▀▄▀▀   █▄▄▀  █ █▄▀▄██
+█ ▀ █▀ ▄ ▄ ▄  ▄ █▄▀ ▀▀▀    ▄   ▄█▀▄ ▄ █▀▀▀▄ █ ▀▀▀█▄█▀▄▀▀ ▀█
+█   ██▀▄▀▄█ ▀█▄▄█▄▀  ▄▀▄ ▀▀ ██▀█ ▀█▄▄  ███  ▄▀██▀▀▀▄▀▀█  ▀█
+█▀▄ ▀ ▄▄██▄▄▀  █▀▄█ ▄█▀▀█▄ ▄ ▄▀ █▄▀▄██▄▄█▀▀▀▄▀ ▀▀██▄ ▄▀▀ ██
+█  █ ██▄█ ▄ ▄ ▀▀▄▄ ▄▀▄▀█▄▀▀▄▀  ▀ █▀█ ▄ ▄▄█▀▀▄█▄▄ ▀ █▀▀█ ▀▄█
+█▄ ▄▄ █▄▀▄█▀  ▀█ ▀▀▀▄▄▄▀▄ ██▀▄███▄▀▄ ▄▀█▀██▀▄▀█▀██▀▀ ▀  ▄██
+█▀▄▄▄▄█▄▀▄▄▀▄█▀█▄▀▄▄▄█▀█▀▄  ▀▀   █▀▄▀▄ █▀█▀▀ ▀▄█▄▀ ▄▀█▄▄ ▀█
+█ ▄▀▀ ▄▄ ▀▄█ ▀▀▄▄ ██▄█ █▀█▀  ▀▀ ▄▄█ ▄▄▀▀ ▀ ▀ █ █▄▄▄█ █▀▀▀▀█
+█████▄█▄  █▀ ▄█ █▄ ▄█▄▀▀  ██▄▀▀ ▄  █   ▄██▀▀ ▀ █▀  █▀▀█▀▄ █
+█▄▀█▄ ▄▄▄ ▀ ▄ ▀▄▄█▄█ ▀▄██▀▀ ▄▄▄ ▄▄█▄▀▄█▄  █▄  ▀▄▄ ▄▄▄ █  ▀█
+█▀█▄  █▄█  ▄▀▄ █▄█▄▀▀▄▄█▄▀▀ █▄█  █▄█▀ ▀▄▀▀   ██▄█ █▄█ ▀▀▀▀█
+█ ▄█▀▄▄▄  █▄▀  █ ▄▄▄█▄▄█▄██  ▄▄▄▀█▄ █▄ ███▀▀▄█ ▀▀▄▄▄  █ ███
+█    ▀▀▄▀▄█▀▀ █ ▀▄ ▄▀█▀▀▀▀▄▄▄▄▀  ▀▀█ ▄ █▀█   ▀▄██▀  ▄█▄▀▀ █
+█▄▀ ▄▀ ▄▀▀ ▀▀▀██▀▄▄ ▄▄▀▄▀▀▀▄▀▄▀ ▄▀ ▄ ▄  █▀█ ▀▀▄▄▀█▄█▄▄▀ ███
+█▄▀▄  ▀▄▄  ▀█ ▀▄▀█  ▀▀▀▀▄ █▀▀█▄▀▄██▄ ▄▀▄▀▀▀ ▄▀▀▄▀ ▄▄▀▄█▄█▀█
+█  ▄▄▄█▄█ ▀███▄ ▀█  ▀ ▀▀▄ █▄▀██▄ █ ▄█▀▄ ▄▀▄ █  ▄█▄▄▀▀▄ ▀▄▄█
+█▄  ▄█▀▄▀█▀█▄ ▄██▄  ▄▄██  █▀▄▄▀█▀█▀█▄  █▄█  █▀██▀▀▀▀▀▄ █▀▀█
+█▄   █▄▄▄▄▀ ▀▄▀▄ █▀ ▄▄▀ █▄▀▀▀▀  ▀█ ▀▀ ▀█▄█ ▀  ▄ ▀▄▄▀ ▄ ▀ ██
+█▄ █▄▀▀▄▄ ▄ ▄▀▄█▀▄▀ ▀█▀▄█▀█▀▄▄ █▄▀ █  ▄▄██▄▀██▄█▀█ ███▀▀█▀█
+█ ▀ ▀▀▄▄▄ ▄▄█▄▄▀▀▄▀▀▀█ ▄▀  ▀▄█  ▀ █ ▀█ ▄▄ ▄█▄▄█▀▄▄█▀█ ▀  ██
+███████▄█▀ ▀▄███▄█▄▄▀▄▀▀▄▀▀ ▄▄▄ ██▄█  ▀▄█▀▀ ▄▀▄██ ▄▄▄ ▀  ▀█
+█ ▄▄▄▄▄ █▄ ▀ ▀▄▄▄▄  ▀ ▄▀▀▀▄ █▄█ ▄▄▄██▄ █▄▀▀▀▀▀█ ▀ █▄█ ▄ ███
+█ █   █ █ ▀▄ █▄▀▄▀▀▄▄█▀█▀▄ ▄▄  ▄ ▀█▄▀▄ ▄▀█   ▀█▄█▄ ▄ ▄▄█▄██
+█ █▄▄▄█ █    ▀▄▀▄ ▀▄▄█ ▄▀█▄ ▄▀▀████▀ ▄▄▀ ▀▄▄█▀▄▀  █▄▀▀▀▀███
+█▄▄▄▄▄▄▄█▄▄██████▄▄▄█▄███▄▄█▄▄█▄▄▄▄▄▄▄█▄██▄▄▄██▄█▄▄▄▄██▄▄██
+
+[90m[11:38:50 AM][0m [36mℹ [INFO][0m Waiting for QR code scan from your phone or Web UI...
+[90m[11:39:20 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:39:20 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:39:20 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:39:20 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:39:20 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:39:20 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:39:20 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:39:21 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426961727 from=82338969043093@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (82338969043093 != owner 919363936963)
+[90m[11:39:21 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426961728 from=82338969043093@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (82338969043093 != owner 919363936963)
+[90m[11:39:22 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426962030 from=121346398912743@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (121346398912743 != owner 919363936963)
+[90m[11:39:22 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:39:22 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426962587 from=218454938357781@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (218454938357781 != owner 919363936963)
+[90m[11:39:22 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:39:25 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426965861 from=67534132879446@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (67534132879446 != owner 919363936963)
+[90m[11:39:32 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426972244 from=184280286290088@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (184280286290088 != owner 919363936963)
+[90m[11:39:33 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793426973773 from=919361430509@c.us to=260434468843692@lid shouldProcess=false reason=outgoing message to another contact
+[90m[11:39:43 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426983030 from=133947195420743@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (133947195420743 != owner 919363936963)
+[90m[11:39:43 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426983031 from=133947195420743@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (133947195420743 != owner 919363936963)
+[90m[11:39:43 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426983322 from=137778910232586@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (137778910232586 != owner 919363936963)
+[90m[11:39:43 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426983357 from=12764844159095@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (12764844159095 != owner 919363936963)
+[90m[11:39:43 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426983979 from=80565449543837@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (80565449543837 != owner 919363936963)
+[90m[11:39:44 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426984020 from=131027171311673@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (131027171311673 != owner 919363936963)
+[90m[11:39:44 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426984072 from=173383887134852@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (173383887134852 != owner 919363936963)
+[90m[11:39:44 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426984188 from=7426669564086@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (7426669564086 != owner 919363936963)
+[90m[11:39:44 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793426984189 from=7426669564086@lid to=88236110172160:12@lid shouldProcess=false reason=unauthorized sender (7426669564086 != owner 919363936963)
+[90m[11:39:59 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793426999282 from=919361430509@c.us to=260434468843692@lid shouldProcess=false reason=outgoing message to another contact
+[90m[11:40:15 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427015172 from=260434468843692@lid to=919361430509@c.us shouldProcess=false reason=unauthorized sender (260434468843692 != owner 919363936963)
+[90m[11:40:40 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427040484 from=42649562132637@lid to=88236110172160@lid shouldProcess=false reason=unauthorized sender (42649562132637 != owner 919363936963)
+[90m[11:40:40 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427040485 from=164132326219925@lid to=88236110172160@lid shouldProcess=false reason=unauthorized sender (164132326219925 != owner 919363936963)
+[90m[11:41:12 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427072532 from=120363425928532671@g.us to=919361430509@c.us shouldProcess=false reason=group messages disabled
+[90m[11:42:20 AM][0m [36mℹ [INFO][0m Shutting down WhatsApp Web client...
+[90m[11:42:20 AM][0m [32m✔ [SUCCESS][0m WhatsApp Web client closed cleanly.
+[90m[11:43:01 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:43:01 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:43:01 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:43:04 AM][0m [33m⚠ [WARN][0m Scan the QR code below using WhatsApp (Linked Devices) to authenticate:
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █▀ ▄▀▄█▄ █ ▀▀▀██▄  ▀ ▄▄▄▀█▀██▀ █ ▄▄▄█▄▄▄ ██ ▄▄▄▄▄ █
+█ █   █ █▀▀▄▀▄ █▄▄█ ▄███▀ ▀█▄█ ▄ ▄▄▀▄▀ ▀▄▄ █ ▄ ▄ ██ █   █ █
+█ █▄▄▄█ █▀▄█▀▀▄ ▄█▄█▄ ▀▀▀ █ ▄▄▄  ███▀ ▄█ █  ▀ ▀▀▄██ █▄▄▄█ █
+█▄▄▄▄▄▄▄█▄█ ▀ █▄▀▄▀▄▀ █▄█ █ █▄█ ▀▄█ ▀▄▀▄█ █▄▀▄█▄▀▄█▄▄▄▄▄▄▄█
+█   ▄▄▀▄▄▄█ ██ ▀▀▄▄▄▀███▀▀ ▄▄   ▀█▀█▀▄ █▀▀█▀▄▀▀▄   █ █▄▀ ██
+██ █▄  ▄▄ █▀▄ ▄ █▀▀ ▀▀▀ ▄  █▄▀ █▀█▄▄█   █▀▄▀█ ▀▄█▀█▄▀▀▀▀▄▀█
+███ ▀▀▄▄▄█ █ █▄▄█▄▀ ▀█▀▄▀▀█▀ █▀█ ▀▀█ ▄▀█▄█▀ █▀██▀▀▀██▀▀ ▄▄█
+█▄▄▄▀ █▄▄▄▄▄█▀▄█▄▄▄▄█▀▄▄ ▀▀▄ █▀ █  ▄ ▄▄▀██▀▀▄▀▄▄ ▄▀▄▄█ ▀▄██
+█▄▄▀█▄ ▄ ▀ █▀▄▄█▄▄▄▄ ▄▀█▄▀█▄▀ ▀ ▄▀▀█ ▄█▄██▀▀▄███▀▀▀▄▀█▀█▀██
+█▀▀ ▄ ▄▄▄▄█▄█▄▀█▄▄▀▄▄ ██▀ ▀█▀ ▀▄  █▄ █ ▄█▀ ▀█▀▄▀  ▀▀▄▀▄  ▀█
+█▀▀▄ ▄█▄   ▄ █▀█▄▀  ▄█▀█▀▄  ██  ▀█▄▄  ▄███ ▀▄█ █▄▀ ██▀▄▀  █
+█   ▀▀▄▄▄█ █▄▀▀ ▄  ▄▄██▀▀█▀ ▄ █▄█▄█ ██▄ ▀█▄  █  ▀ ▄█▄▄▀▀▀▀█
+█▄▀▀ █▀▄ ▀██▀▀ ▄▄█▄ █▄█▀  ▀▀▄▀█▀▄  █▄▄█▄██   ▀██▀ ▀▄▀▀█ ▄ █
+███▀▄ ▄▄▄ ██▀▀▀   ▄█ ▀▄██▄█ ▄▄▄ ▄ █  ▄ ▄▀█ ▄▀▀▀██ ▄▄▄ ▀ ▄▀█
+█▀█▄  █▄█  ▄▀▀█▄█▄▄▀ ▄▄█▀▀▀ █▄█ ▀▀█▄▄ ▀█▀█ ▀▄█ ▄  █▄█  ▀ ██
+█ ▀▀ ▄ ▄ ▄ ▄▀  ▀ ▀█▀█▄██ ▀   ▄ ▄▄ ▄▀█▀█▄ ▀▄   ▀ ▀▄    ▀▀ ▀█
+█ █ ▄▀ ▄▀ ██▀▄█ ▄█▀▄▀██▀ ▀▄▀█▄▀ ▄▀▀█  █▄██  ██▄█▀██▄███▀▄██
+█▄▀▄ ▀ ▄ ▀▀ ▄▀▀█▀██ ▀▀▄▄▀ █▄▀▄▀ ▄  ▄  ▄▄▄▀▀ ▄█ ▀▄█▄▀▄▄ ▀▄▀█
+█▀ █▀▄ ▄█▀▀  ▄▄ ▀█▄ ▀▀██▄ ▄█▀█   █▄█▄▄▀█▄█▀▀ ▀█▄█▀█▀▀▄  ▄▀█
+█▄▀▀ ▄█▄▄▀██▄▀▀ ▀█▀▀▀ ▄█▄ ▄▄▀█  ▀█ █▀███▄█ ▀▀▀ █▀▀ █▄ ▀▀▄▄█
+███▀  ▄▄▄ ██▀▄  █▄▄▄▄▄█▀▀ █▀▀▄ ▀▀█▀█▄▄▄███▄ ▄▀██▀  █▄▄▄ ███
+█▀▄▀▀▄▀▄ █▄▄ ▀ ▄▄▄▀ ██▀ █▄█▀█ ▄ █▀ ▀█▀ ▄▄  ▀▄▀▀▀█▄▀▀▄  ▀▄▀█
+█▀▀█▄▄ ▄█▀ ▄ ██▄█▄▀ ▀▄▀▄▀▀▄▄███  ██▄ ▄▀███ ▀▄▀ ████▀████▀██
+█ ▀ ▀▀▄▄▄▄███ ▄█▀▀█▀▀▄▄▀▀▀▄▀▀▄█▄▄▀█▀▀██▀▄ ▀▀▄▀█▄▀ ▄▀▄█▀▀ ██
+███████▄▄▀█▀█▀█ ██ ▄▀▄██▀ ▄ ▄▄▄ ▄▀ ██▄▀█▀█▀ ▄███▀ ▄▄▄ ▀ ▄▀█
+█ ▄▄▄▄▄ █▄ ▀█ █    ██▀ ▄█▄█ █▄█  ▀▀ ██ ▀ █▄▀▀▀▀█▀ █▄█ ▀▀ ▀█
+█ █   █ █ ▄▄█▀ ▀▄▀  ▄█▀█▀▄▀ ▄▄ ▄█▀▄▄▄▄▀▄██   ▀███   ▄▄█▄▄▄█
+█ █▄▄▄█ █  ▄▀▄ ▄▄ ▀▀▄█ ▄▀█▀▀██▀█▄█▄▀ ▀▀▄▄▄  ▄▀▀▄▄▄█▄▀▀  ███
+█▄▄▄▄▄▄▄█▄▄█▄█▄█▄▄▄▄▄▄▄██▄▄█▄██▄▄▄▄▄▄▄▄▄████▄█▄▄██▄▄███▄▄██
+
+[90m[11:43:04 AM][0m [36mℹ [INFO][0m Waiting for QR code scan from your phone or Web UI...
+[90m[11:43:21 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:43:21 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:43:21 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:43:21 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:43:21 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:43:21 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:43:23 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:43:23 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:43:28 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210461 from=82338969043093@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (82338969043093 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210465 from=121346398912743@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (121346398912743 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210468 from=218454938357781@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (218454938357781 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210471 from=67534132879446@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (67534132879446 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210475 from=184280286290088@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (184280286290088 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210479 from=133947195420743@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (133947195420743 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210486 from=137778910232586@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (137778910232586 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210493 from=12764844159095@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (12764844159095 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210497 from=7426669564086@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (7426669564086 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210501 from=80565449543837@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (80565449543837 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210504 from=131027171311673@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (131027171311673 != owner 919363936963)
+[90m[11:43:30 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427210511 from=173383887134852@lid to=88236110172160:13@lid shouldProcess=false reason=unauthorized sender (173383887134852 != owner 919363936963)
+[90m[11:43:45 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427225986 from=260434468843692@lid to=919361430509@c.us shouldProcess=false reason=unauthorized sender (260434468843692 != owner 919363936963)
+[90m[11:43:52 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:43:55 AM][0m [36mℹ [INFO][0m Shutting down WhatsApp Web client...
+[90m[11:43:55 AM][0m [32m✔ [SUCCESS][0m WhatsApp Web client closed cleanly.
+[90m[11:44:13 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:44:13 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:44:13 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:44:15 AM][0m [33m⚠ [WARN][0m Scan the QR code below using WhatsApp (Linked Devices) to authenticate:
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █ ▀▄█▄█▀▄██ █ █▄ ▄▄▄█ █▄ ▀▄▀▄ ▀▄ ▄▀▄▄ ▀▄ ██ ▄▄▄▄▄ █
+█ █   █ █ ▄▀ ▀ █▄▀▄▄██▄▀█▄▀█▄▀▄▄▀▄▄▀▄█  ▄▀▄█▀█ ▄ ██ █   █ █
+█ █▄▄▄█ █▀▀ ▀▄▀▄▀█▀ ▀██▀▀   ▄▄▄  ▄▀▀█▄▀▄ ▄  █ ▄▀▄██ █▄▄▄█ █
+█▄▄▄▄▄▄▄█▄▀▄█▄▀ ▀ █▄▀ ▀▄▀▄█ █▄█ ▀▄█▄█ ▀ ▀▄█ █ ▀ █ █▄▄▄▄▄▄▄█
+█▄▄██  ▄██▀  ██▄▀▄▀▄█▀▀▀  ▀▄ ▄  ▄ ▄█▀▄▄▀ ▀▀▀▀  █  █▀ ▀▄ ▄ █
+██ ▀█▄ ▄▀▀███▀▄ ▄ ▄█▀▀▀██▄▀▄  ▄ █▀ ▀▀▀▀▀▀▀▀▄▄█ ▀▄█▀▄██▄▄ ▀█
+██▄▀▄▄▄▄██▄ ▄ ▀▀ ▄▀ █▀▄▄  ▀▄ ▀▀█▀▄ █ ▄█  █▀▀█▄ ▄▀ ▄▀ █▀▄  █
+█ █▀▄▄▄▄█ █▄▄▀▀▄▀▄▄███▀▄▀█▀█   ▀▀ ▀ ▄▄▀█▀▀   █  ██▀▀▀▄▄▄▄▀█
+█▀▀ ▀█▄▄█▄▄▄█▄▀ ▀█▄▄█▀ ▀▀▀▄▀▄ █▀▀ ▄▄▄ █▀ █  █▄ ▄  █  █▄█ ▀█
+█ ▀█▄▀ ▄█▀█▀█▄▀██ ▀▄▀▀▀▄  ███▀█ █ ▀▀██ ▀▀ ▄▄▀▄█▄ ▄▀▄█▄██ ▀█
+█▀█▄ █▀▄ ▀▀█  ▄ ▀▀▄▄▀  █▀▄▄█▄▀ ▀█ ▄█ ▄█▀▄█ ▀█ ▀█▄▀  ▀██ ███
+█▄███▀ ▄▀ ▄▄█ ██▄█▄▀▄█▄ ▄ ▀ █▄▀ ████▄▀▀  ▀▀▀█  ██ ▄   ██▀▀█
+█▀▀ ▄█▀▄███▀▀ █ ▀▄ ▄ ▀▄▀▀▀ ▄█▀  ▀███ ▄ ▀▄█  █ ██▀▀▄ ▄▀▄ █▀█
+█▄ ██ ▄▄▄ █▄██ ▄▀█▀  ▀▄  █▀ ▄▄▄   ▀█▀██▄ █▄█▀▀█▀▀ ▄▄▄ ▄█ ▀█
+███ ▄ █▄█  █▄▀  ▄▄▄▀█▀▀█▀ ▄ █▄█ █ █▄ ▄█ ▄▀▄ █▄▀▄█ █▄█ ▀ ▀ █
+█ ▀██▄▄▄  █▀▀  ▄ ▀▀█▄█▄▄█ █▄▄ ▄ ▀▄██▄▄█▀█ █ ▄█ █  ▄  ▄▄▄▄██
+█▀█▄▄▀ ▄  ▀▀█ ▄ ▄▄▄▄▄ ▄█▀ ▀▄ █▀ █▄▄█ ▄█ ▄▀ ▀▀▄▄█▀█▄ ▀▄█▄▀ █
+█▄█▄▄▀▀▄▀▀ █ ▄█▀ ▀▀ █▀█ ▀▄ ▄█▀▄█ ▀ ▀█▀▄▄▄███▀█▀██▄█▀▄ ▄█ ▀█
+██▄▄█▄▀▄ ▀▄▄█▄▀ ▄█ ▄▄▄▄▀▄ ▀█▄█▀▄▄ ▀█ ▄█ ██  █▄███▀ ▄ ▄ ▀ ▄█
+█▄▄ ▄▀▀▄████▄ ██▀ ▀█▀ ▄█▀█▄▄▀ █▀▀█   ██  ▀██ ▀█▀▄▀▄▀ ▀█▄▄▄█
+█ █▀█▄ ▄▄██▀█▀ ▀█▄█▄▀▀▄█   ▄ █  ▄ ▄█  █▀▄▀▀   ██▀ █▄▀▄▀█▄▄█
+███  ▀▀▄▀ ▀▄ █▄▄ █▄█ ▄▀█▄█▀▀ ▀▀▀█▀    ▀▀█ █▄ ▀█▀ ▀▄▀ █▄▄▄██
+█ █ ▄▀▄▄▄▄█ █ ▄█ ▄▀ █▀▄▄▀  ▄▄▄▀▀█ ██▀ █ ▄▀  ▄  ██▄ █▀▄  █▄█
+█ ▀ ▀▀▄▄ █▀▀█▄▀█ ▀█ █▄█▀███▄▀▄██▀▄██ ▀█   ▄█▀ ▄ ▄█ ▀▄ ██ ▀█
+███████▄▄▀██▄█▄▄▀▄  █▀▄▀▀ ▄ ▄▄▄ █ ▀█▄▄▄  ▀  ▄ ▀█▀ ▄▄▄ ▄█▄▄█
+█ ▄▄▄▄▄ █▀ ▄▀▄█ █ ▀██▀▀ ███ █▄█ ▄█▄█▀█  █ ▀█   ▄█ █▄█ ▄▄███
+█ █   █ █▄▄ ▄▄▀ ▀▀▀▄▀  ▀▀▄▄▄   ▄█▄ ▄ ▄█  █▀▀▄ ▀█ ▄ ▄ ▄▀ ▀ █
+█ █▄▄▄█ █▀▄ ▀▀ ▄▄██ ▄█▄▄▄ ▀█▄ ▄ ▄██▄▀ ▀▀██▀ ▀ ▀ ██ ▄▀ ▄▄███
+█▄▄▄▄▄▄▄█▄██▄██▄█▄▄▄▄█▄█▄█▄▄███▄███▄▄▄█▄███▄█▄███▄█▄▄██▄█▄█
+
+[90m[11:44:15 AM][0m [36mℹ [INFO][0m Waiting for QR code scan from your phone or Web UI...
+[90m[11:44:45 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:44:45 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:44:45 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:44:45 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:44:45 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:44:45 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:44:46 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427286674 from=20547828203635@lid to=260434468843692:96@lid shouldProcess=false reason=unauthorized sender (20547828203635 != owner 919363936963)
+[90m[11:44:47 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:44:48 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:44:55 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919361430509
+[90m[11:45:08 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427308260 from=88236110172160@lid to=919363936963@c.us shouldProcess=false reason=unauthorized sender (88236110172160 != owner 919361430509)
+[90m[11:45:10 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427310794 from=121346398912743@lid to=260434468843692:96@lid shouldProcess=false reason=unauthorized sender (121346398912743 != owner 919361430509)
+[90m[11:45:16 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427316343 from=184280286290088@lid to=260434468843692:96@lid shouldProcess=false reason=unauthorized sender (184280286290088 != owner 919361430509)
+[90m[11:45:22 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427322944 from=174745693733100@lid to=260434468843692:96@lid shouldProcess=false reason=unauthorized sender (174745693733100 != owner 919361430509)
+[90m[11:45:24 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427324006 from=7426669564086@lid to=260434468843692:96@lid shouldProcess=false reason=unauthorized sender (7426669564086 != owner 919361430509)
+[90m[11:45:24 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427324628 from=190035475312697@lid to=260434468843692:96@lid shouldProcess=false reason=unauthorized sender (190035475312697 != owner 919361430509)
+[90m[11:45:26 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:45:40 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793427340342 from=919363936963@c.us to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:45:40 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hi
+[90m[11:45:40 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:46:04 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793427364779 from=260434468843692@lid to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:46:04 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hello! How can I help you with your project today?
+[90m[11:46:04 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:46:04 AM][0m [32m📤 [SENT][0m [1m919363936963:[0m Hello! How can I help you with your project today?
+[90m[11:46:40 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793427400002 from=260434468843692@lid to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:46:40 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m Haha, looks like the roles got reversed! 😄  I'm ready to help you with *RipeAI*. Here is a quick...
+[90m[11:46:40 AM][0m [32m📤 [SENT][0m [1m919363936963:[0m Haha, looks like the roles got reversed! 😄  I'm ready to help you with *RipeAI*. Here is a quick...
+[90m[11:46:40 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:46:40 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793427400525 from=225064960131125@lid to=260434468843692@lid shouldProcess=false reason=unauthorized sender (225064960131125 != owner 919363936963)
+[90m[11:47:06 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793427426158 from=260434468843692@lid to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:47:06 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m Touché! In that case, boss... what are my instructions for today? 😉  Jokes aside, I'm all set to...
+[90m[11:47:06 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:47:06 AM][0m [32m📤 [SENT][0m [1m919363936963:[0m Touché! In that case, boss... what are my instructions for today? 😉  Jokes aside, I'm all set to...
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:47:38 AM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[11:47:38 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:47:38 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:47:39 AM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[11:48:06 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:48:07 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:48:09 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:48:09 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:54:58 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793427898191 from=919363936963@c.us to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:54:58 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hi
+[90m[11:54:58 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:55:15 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=true id=wa_1793427915750 from=260434468843692@lid to=260434468843692@lid shouldProcess=true reason=OK
+[90m[11:55:15 AM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hello! How can I help you today with your *RipeAI* project?
+[90m[11:55:15 AM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[11:55:15 AM][0m [32m📤 [SENT][0m [1m919363936963:[0m Hello! How can I help you today with your *RipeAI* project?
+[90m[11:55:39 AM][0m [36mℹ [INFO][0m Shutting down WhatsApp Web client...
+[90m[11:55:39 AM][0m [32m✔ [SUCCESS][0m WhatsApp Web client closed cleanly.
+[90m[11:55:43 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:55:43 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[11:55:43 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[11:55:50 AM][0m [33m⚠ [WARN][0m Failed to reply via chat.sendMessage, trying msg.reply: Attempted to use detached Frame 'E9E78629A13D7ECE94D6EB1BD8A786B0'.
+[90m[11:55:50 AM][0m [31m✖ [ERROR][0m Unexpected error handling incoming message:
+[90mError: Attempted to use detached Frame 'E9E78629A13D7ECE94D6EB1BD8A786B0'.
+    at CdpFrame.<anonymous> (/home/monish/Projects/RipeAI/whatsapp-bot/node_modules/puppeteer-core/lib/cjs/puppeteer/util/decorators.js:107:23)
+    at CdpPage.evaluate (/home/monish/Projects/RipeAI/whatsapp-bot/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:830:43)
+    at Client.sendMessage (/home/monish/Projects/RipeAI/whatsapp-bot/node_modules/whatsapp-web.js/src/Client.js:1533:44)
+    at Message.reply (/home/monish/Projects/RipeAI/whatsapp-bot/node_modules/whatsapp-web.js/src/structures/Message.js:471:28)
+    at processIncomingMessage (/home/monish/Projects/RipeAI/whatsapp-bot/src/services/whatsapp.js:348:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)[0m
+[90m[11:55:58 AM][0m [33m⚠ [WARN][0m Scan the QR code below using WhatsApp (Linked Devices) to authenticate:
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █▄▀ █▀█ ▀█   ▀█ ▀  ▀█▄▄ ▀ ▀█ █▄▀ █▄ ▄▀ ▄ ██ ▄▄▄▄▄ █
+█ █   █ █ ▄▀▄▀▀██▄  ▄▄▄█ ▀ █ ██ █▄▄▄▀▀█▀▄█▀█▀▄▀▄ ██ █   █ █
+█ █▄▄▄█ █▄ █ █▄▄▀▀▀▀ ▀▀  █▀ ▄▄▄ ▀███▀█  █▀ ▀ ▄▄▀▄██ █▄▄▄█ █
+█▄▄▄▄▄▄▄█▄█ ▀▄█ █▄█▄▀▄█ ▀▄█ █▄█ ▀ ▀ █ █ ▀▄█▄█ ▀ █ █▄▄▄▄▄▄▄█
+█ ▄ ▄██▄▀▄ ▀█▀██ █ ▀ ██ ▄ ▀▄ ▄   █ ▄▀▀ █▄▄ ▀▀█▄█ ▀▄██ ▄ █ █
+██▄█▄█ ▄████ ▄ ▀ █ ██ ▄▄▀ ▀▄▀▀ ▀▀ ▀ ▀████ ▄▀█▀▄ █▀ ▀▄▀ ▄  █
+█▄ █ █▄▄ ▄ ▄  ▄ █▄█▄▀▀█▄█▄▄ ███▀ ▀ █▄   ▀▀███▀ ▄█▄▀ ▀▀█▄ ▀█
+█ ▀ ▀▄█▄ ▄ ▀▀█▄ █ █  █   ██▄▀███    ▀▀  █▄▄█▀▀█▄▄  ▄▄▄█▀▀▀█
+█ ▄████▄  █ ▄█▀  ▀ ▀ █▄▀ █ ▀▄▄▄█ ▄▄▀████ ▀██▀ ▄  ▄▄█ █▄▄ ▄█
+█ ███▀▀▄▄ ▀▄  ▀▀█▄▀▄▄   ▀  ▀█▄██ ▄█ ▄▀ █ ▄▄██   █▀█▄▀▀▄▄▄██
+██▀█▄  ▄ █ ▄▀▄ ██  ▀██ ▄▀█ ▀▄▄▀ █▀▄█▀▀ ▄▄ ▄ ▀██▄▄  ▄▄ █▀ ▀█
+█ ▄ ▀▄▄▄ ▄█ █ █▄▀▄▀█ ▄█   █▀ ▄▄ ▀▄▀█▄▄  ▄█▀▄▄▄▄█ █ ▄ █▀▄█ █
+█  ▀ ▄ ▄▄▄█  █   ▄  █ ▄▀▀█▀▀▄███▄▄▄█▄▄▀▀▀███▄█ █▄▄▀  █ ▄ ▄█
+██▀ █ ▄▄▄ ▀ ▀  █ █▄▄▀▀█▄▀ █ ▄▄▄ ▀  ▀ ▀█▀▀▄█▄ ██▀  ▄▄▄ ▀▀▄▀█
+█ ▄▀█ █▄█  ▄█▄ ▄▀▀█▄▄▄▀▀ ▄█ █▄█ ▀ ▀▀▀█▄█▄▀ ▄▄ ▀   █▄█ █▀▄ █
+█▄██ ▄▄▄ ▄▄ ██ ▄▀▄█ ▄▀ ▄▄ █ ▄▄ ▄█▄ ▀▀▄█ █ ▀▄█▀▄ ▀  ▄ ▄▄██▀█
+█▄▄ ▄ ▀▄█▄  ▄█▀▄▄█ █ ▄    █  █▀▀█▀ ▄▄█▀▄  ▀▀▀█ █▀▄▄▄██▄ ▄▄█
+█ ▄ ▀ █▄▀  █▀ ▄▄ ▀▀████▄███▀   ██▀█▄▀ █▄▀▄███▀▄▄█▀ ▄▀▀▀█▄▄█
+█ ▀▄█ ▄▄▄█ ▄▀▀▀████ ▀█▀▀ ▄▄ ██▄▀ ▀▀██ ▀▀█▀▄▄▀▀▀█▀▄▀ ▀███▄██
+█▀█ █▀▄▄ █▄ ▄█▀  ▄██  ▄▀▄▀█  ▄▄█▀█ ▄  ▄   ▄▄▄█▀▀  █▀██ ▀█▄█
+█▄▄▀█ █▄▄██ ▄ █▄ ▀▀█ █ ▀▀▄▀ ▀ █▄█▄▄▀▀▀▀▄ █ █▄▄▀    ▄▄  █▀▄█
+█ █▄ █▀▄▀▄ ▄▀▄█▀▄▄█▄  █ ▄█▀█▀▀▄▄██▄▀▄ ▀ █ ▀█▀▄▄ █  ▀▄▄▄▄ ██
+██ █▄▄█▄▄▄▄██▄▄▄▄█▀▀▀█ █▀ █▄▄▄██▀████▀▀█    ██▀▄█▀█▀█▄▄▄ ▄█
+█ ▀ ▀▀▄▄▄ ▄███▀ ▄▀▄█▄█▀▀▄█  ▄▀█▀▄  ▄▄▀▄█▀  █▀ ▄  ▀▄▄   ▄▄▄█
+███████▄▄▀ █▀ ▄  ▄ ▄  ▀▀▄▄█ ▄▄▄ ▄█ █▄   ▀██▄▄▀ ██ ▄▄▄ █▄▄▀█
+█ ▄▄▄▄▄ ███▀     ▄█ ▄▀▀▀▀▀▄ █▄█ █▀▀▀▄█▀ ▀█▄█ ▄▀▄  █▄█ ▄ ▀▀█
+█ █   █ █▀█ ▄▄█ ▀█ ▀ ▄▄█ ▀▄▄ ▄   ▄▀ █▀▄▄ ▀▀█ ▄█   ▄ ▄ █  ▄█
+█ █▄▄▄█ █ ▀ ▀▄▄   ▄ ▄▀███▀ █ ▀█▀█   ▀█▄▄▄ ▄▀█ ▀▄█▄  ▀█▄██▀█
+█▄▄▄▄▄▄▄█▄▄██▄▄▄██▄█▄▄▄▄████▄████▄██▄██▄█▄█▄████▄█▄█▄▄█████
+
+[90m[11:55:58 AM][0m [36mℹ [INFO][0m Waiting for QR code scan from your phone or Web UI...
+[90m[11:55:59 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:56:19 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:56:19 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:56:19 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:56:19 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:56:19 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[11:56:19 AM][0m [36mℹ [INFO][0m Owner phone number set to: +919363936963
+[90m[11:56:20 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[11:56:22 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[11:56:23 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+[90m[11:56:40 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428000704 from=260434468843692@lid to=919361430509@c.us shouldProcess=false reason=unauthorized sender (260434468843692 != owner 919363936963)
+[90m[11:56:40 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428000705 from=260434468843692@lid to=919361430509@c.us shouldProcess=false reason=unauthorized sender (260434468843692 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039502 from=82338969043093@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (82338969043093 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039503 from=82338969043093@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (82338969043093 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039519 from=121346398912743@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (121346398912743 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039527 from=67534132879446@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (67534132879446 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039533 from=7426669564086@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (7426669564086 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039546 from=218454938357781@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (218454938357781 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039547 from=218454938357781@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (218454938357781 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039561 from=184280286290088@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (184280286290088 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039747 from=133947195420743@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (133947195420743 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039831 from=137778910232586@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (137778910232586 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039848 from=12764844159095@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (12764844159095 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039873 from=80565449543837@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (80565449543837 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039902 from=131027171311673@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (131027171311673 != owner 919363936963)
+[90m[11:57:19 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428039908 from=173383887134852@lid to=88236110172160:14@lid shouldProcess=false reason=unauthorized sender (173383887134852 != owner 919363936963)
+[90m[11:57:28 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428048900 from=164132326219925@lid to=88236110172160@lid shouldProcess=false reason=unauthorized sender (164132326219925 != owner 919363936963)
+[90m[11:57:28 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428048901 from=164132326219925@lid to=88236110172160@lid shouldProcess=false reason=unauthorized sender (164132326219925 != owner 919363936963)
+[90m[11:57:28 AM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793428048904 from=42649562132637@lid to=88236110172160@lid shouldProcess=false reason=unauthorized sender (42649562132637 != owner 919363936963)
+[90m[12:01:25 PM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[12:01:26 PM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[12:01:28 PM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[12:01:28 PM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919361430509,919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[12:13:29 PM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[12:13:29 PM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[12:13:29 PM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[12:13:29 PM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[12:13:36 PM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[12:13:36 PM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening! Linked account: +919361430509
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Linked Phone: +919361430509
+  [2m•[0m Owner DM(s): Locked to: +919361430509, +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[12:13:38 PM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919361430509@c.us]...
+[90m[12:13:38 PM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to +919361430509!
+[90m[12:13:38 PM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[12:13:38 PM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to +919363936963!
+[90m[12:16:50 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793429210067 from=260434468843692@lid to=919361430509@c.us shouldProcess=true reason=OK
+[90m[12:16:50 PM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hello
+[90m[12:16:50 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793429210068 from=260434468843692@lid to=919361430509@c.us shouldProcess=true reason=OK
+[90m[12:16:50 PM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hello
+[90m[12:16:50 PM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[12:16:50 PM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[12:17:07 PM][0m [32m📤 [SENT][0m [1m919363936963:[0m 🤖 *RipeAI:* Hello! How can I help you today with your project?
+[90m[12:17:08 PM][0m [32m📤 [SENT][0m [1m919363936963:[0m 🤖 *RipeAI:* Hello! How can I help you today with the *RipeAI* project?
+[90m[12:17:30 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793429250428 from=260434468843692@lid to=919361430509@c.us shouldProcess=true reason=OK
+[90m[12:17:30 PM][0m [35m📥 [RECV][0m [1m919363936963:[0m List everything what's running in my system
+[90m[12:17:30 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793429250429 from=260434468843692@lid to=919361430509@c.us shouldProcess=true reason=OK
+[90m[12:17:30 PM][0m [35m📥 [RECV][0m [1m919363936963:[0m List everything what's running in my system
+[90m[12:17:30 PM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[12:17:30 PM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[12:18:08 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793429288422 from=120363402995789680@g.us to=919361430509@c.us shouldProcess=false reason=group messages disabled
+[90m[12:18:17 PM][0m [32m📤 [SENT][0m [1m919363936963:[0m 🤖 *RipeAI:* Here is a breakdown of everything currently running on your system:  ---  *1. Projec...
+[90m[12:18:56 PM][0m [32m📤 [SENT][0m [1m919363936963:[0m 🤖 *RipeAI:* Here is a comprehensive breakdown of everything currently running on your system:  -...
+[90m[12:25:45 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=wa_1793429745761 from=120363402995789680@g.us to=919361430509@c.us shouldProcess=false reason=group messages disabled
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919361430509,919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[12:26:34 PM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[12:26:34 PM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[12:26:34 PM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[12:26:34 PM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[12:26:40 PM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[12:26:40 PM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening! Linked account: +919361430509
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Linked Phone: +919361430509
+  [2m•[0m Owner DM(s): Locked to: +919361430509, +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[12:26:42 PM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919361430509@c.us]...
+[90m[12:26:43 PM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to +919361430509!
+[90m[12:26:43 PM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[12:26:43 PM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to +919363936963!
+[90m[12:28:32 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=260434468843692@lid_ACAEA58424BF127458CBB11265F06725 from=260434468843692@lid to=919361430509@c.us shouldProcess=true reason=OK
+[90m[12:28:32 PM][0m [35m📥 [RECV][0m [1m919363936963:[0m Hello, what's today's date and special
+[90m[12:28:32 PM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[12:28:53 PM][0m [32m📤 [SENT][0m [1m919363936963:[0m 🤖 *RipeAI:* Today is *Saturday, October 31, 2026*.  Here are the key occasions and observances c...
+[90m[12:29:04 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=260434468843692@lid_ACF3E2A4365D4D1EBB658FB4DB68F5CD from=260434468843692@lid to=919361430509@c.us shouldProcess=true reason=OK
+[90m[12:29:04 PM][0m [35m📥 [RECV][0m [1m919363936963:[0m Ok ty
+[90m[12:29:04 PM][0m [36mℹ [INFO][0m [Main Page Dispatcher] Routing prompt to http://127.0.0.1:8000/api/whatsapp/incoming-prompt
+[90m[12:29:23 PM][0m [32m📤 [SENT][0m [1m919363936963:[0m 🤖 *RipeAI:* You're welcome! Let me know whenever you're ready or if there's anything you'd like ...
+[90m[12:29:35 PM][0m [36mℹ [INFO][0m [WhatsApp Eval] fromMe=false id=120363420596593978@newsletter_AC3AF3AEBD012BDA8398EABF8B90C205 from=120363420596593978@newsletter to=919361430509@c.us shouldProcess=false reason=unauthorized sender (120363420596593978, 120363420596593978 not in authorized owners: 919361430509,919363936963)
