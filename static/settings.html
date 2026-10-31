@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RipeAI — AI Engines & System Settings</title>
+    <link rel="icon" type="image/svg+xml" href="/static/ripeai-mark.svg">
+    <link rel="stylesheet" href="/static/style.css?v=neo-brutalism-7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-page);
+        }
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-medium);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .settings-container {
+            flex: 1;
+            max-width: 980px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .settings-section-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            box-shadow: var(--shadow-card);
+        }
+        .section-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 12px;
+        }
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+        .model-card-box {
+            background: var(--bg-surface-hover);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all var(--trans-fast);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .model-card-box:hover {
+            border-color: var(--accent-primary);
+        }
+        .model-card-box.active {
+            border-color: var(--accent-primary);
+            background: rgba(0, 229, 153, 0.08);
+        }
+        .memory-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--bg-surface-hover);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Top Navigation Header -->
+    <header class="settings-header">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                <div class="brand-icon"><img src="/static/ripeai-mark.svg" alt="RipeAI"></div>
+                <span style="font-weight: 800; font-size: 17px; letter-spacing: -0.3px;">RipeAI</span>
+            </a>
+            <span style="color: var(--text-muted); font-size: 14px;">/</span>
+            <span style="font-size: 13px; font-weight: 600; color: var(--accent-primary);">System & AI Settings</span>
+        </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+            <nav class="nav-tabs-group">
+            <a href="/" class="nav-tab-btn" title="Chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Chat</span>
+            </a>
+            <a href="/whatsapp" class="nav-tab-btn" title="WhatsApp">
+                <span class="nav-live-dot" id="header-wa-dot"></span>
+                <span>WhatsApp</span>
+            </a>
+            <a href="/setup" class="nav-tab-btn" title="Setup">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
+                <span>Setup</span>
+            </a>
+            <a href="/terminal" class="nav-tab-btn" title="Terminal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <span>Terminal</span>
+            </a>
+            <a href="/settings" class="nav-tab-btn active" title="Settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Settings</span>
+            </a>
+            </nav>
+            <a href="/settings" class="model-selector-chip" title="Active Model" style="text-decoration: none; font-size: 12px; padding: 5px 10px;">
+                <span>Gemini 3.8</span>
+            </a>
+            <button id="theme-toggle-btn" class="icon-btn-ghost" title="Toggle Theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Settings Body -->
+    <main class="settings-container">
+
+        <!-- SECTION 1: AI Model Selection -->
+        <section class="settings-section-card">
+            <div class="section-header-row">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 800; margin: 0 0 4px 0; color: var(--text-primary);">
+                        Local AI Engine & Models
+                    </h2>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                        Select the primary model used for terminal reasoning, chat assistance, and WhatsApp actions.
+                    </p>
+                </div>
+                <div style="font-size: 12px; color: var(--accent-primary); font-weight: 700;">
+                    Active: <span id="active-model-name">Gemini 3.8 Flash (High)</span>
+                </div>
+            </div>
+
+            <div class="model-grid">
+                <div class="model-card-box active" onclick="selectModel('gemini-3.8-flash-high', 'Gemini 3.8 Flash (High)')" id="mod-gemini-3.8-flash-high">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Gemini 3.8 Flash (High)</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);">Highest accuracy & tool completion</div>
+                    </div>
+                    <span class="model-badge-clean recommended">DEFAULT</span>
+                </div>
+
+                <div class="model-card-box" onclick="selectModel('gemini-3.8-flash-medium', 'Gemini 3.8 Flash (Medium)')" id="mod-gemini-3.8-flash-medium">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Gemini 3.8 Flash (Medium)</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);">Balanced latency & intelligence</div>
+                    </div>
+                    <span class="model-badge-clean balanced">FAST</span>
+                </div>
+
+                <div class="model-card-box" onclick="selectModel('claude-sonnet-4-6', 'Claude Sonnet 4.6')" id="mod-claude-sonnet-4-6">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Claude Sonnet 4.6</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);">Extended reasoning & architecture</div>
+                    </div>
+                    <span class="model-badge-clean reason">THINK</span>
+                </div>
+
+                <div class="model-card-box" onclick="selectModel('gpt-6-luna', 'GPT-6 Luna (Codex)')" id="mod-gpt-6-luna">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">GPT-6 Luna (Codex)</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);">Codex CLI execution engine</div>
+                    </div>
+                    <span class="model-badge-clean smart">CODEX</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Agent Controls -->
+        <section class="settings-section-card">
+            <div class="section-header-row">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 800; margin: 0 0 4px 0; color: var(--text-primary);">
+                        Agent Execution Safeguards
+                    </h2>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                        Control how commands are verified and streamed in terminal workflows.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Auto-Run System Commands</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Automatically execute verified tool commands in your Linux environment</div>
+                    </div>
+                    <label class="clean-switch">
+                        <input type="checkbox" id="chk-auto-exec" checked onchange="toggleOption('autoExec', this.checked)">
+                        <span class="clean-slider"></span>
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Safe Mode Guardrails</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Block destructive shell patterns (rm -rf /, format, mkfs, dd)</div>
+                    </div>
+                    <label class="clean-switch">
+                        <input type="checkbox" id="chk-safe-mode" onchange="toggleOption('safeMode', this.checked)">
+                        <span class="clean-slider"></span>
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Live Subprocess Stdout</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Show real-time stdout and stderr output in chat messages</div>
+                    </div>
+                    <label class="clean-switch">
+                        <input type="checkbox" id="chk-show-output" checked onchange="toggleOption('showOutput', this.checked)">
+                        <span class="clean-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Persistent Memory Store -->
+        <section class="settings-section-card">
+            <div class="section-header-row">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 800; margin: 0 0 4px 0; color: var(--text-primary);">
+                        Long-Term Memories (`memories.json`)
+                    </h2>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                        Facts and preferences RipeAI automatically retains across conversations.
+                    </p>
+                </div>
+                <button class="clean-btn clean-btn-danger" onclick="clearAllMemories()" style="font-size: 12px; padding: 6px 12px;">
+                    Clear All
+                </button>
+            </div>
+
+            <div id="memory-list" style="margin-bottom: 16px;">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <input id="mem-key-input" type="text" class="clean-input" placeholder="Key (e.g. favorite_shell)" style="flex: 1; padding: 8px 12px; font-size: 12.5px;">
+                <input id="mem-val-input" type="text" class="clean-input" placeholder="Value (e.g. zsh with starship)" style="flex: 2; padding: 8px 12px; font-size: 12.5px;">
+                <button class="clean-btn clean-btn-primary" onclick="addMemory()" style="font-weight: 700; padding: 8px 16px; font-size: 12.5px;">
+                    Add Memory
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Toast Container -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3500);
+        }
+
+        function selectModel(id, name) {
+            document.querySelectorAll('.model-card-box').forEach(c => c.classList.remove('active'));
+            const card = document.getElementById(`mod-${id}`);
+            if (card) card.classList.add('active');
+
+            document.getElementById('active-model-name').textContent = name;
+            localStorage.setItem('ripe_model_id', id);
+            localStorage.setItem('ripe_model_name', name);
+            showToast(`Selected ${name}`);
+        }
+
+        function toggleOption(key, val) {
+            localStorage.setItem(`ripe_${key}`, val);
+            showToast(`${key} set to ${val}`);
+        }
+
+        async function loadMemories() {
+            try {
+                const res = await fetch('/api/memories');
+                if (!res.ok) return;
+                const data = await res.json();
+                const list = document.getElementById('memory-list');
+                list.innerHTML = '';
+
+                const entries = Object.entries(data);
+                if (entries.length === 0) {
+                    list.innerHTML = '<div style="font-size: 12.5px; color: var(--text-muted); font-style: italic;">No memories saved yet. The agent remembers facts automatically via &lt;remember&gt; tags.</div>';
+                    return;
+                }
+
+                entries.forEach(([k, v]) => {
+                    const row = document.createElement('div');
+                    row.className = 'memory-row';
+                    row.innerHTML = `
+                        <div>
+                            <strong style="color: var(--accent-primary);">${escapeHtml(k)}:</strong>
+                            <span style="color: var(--text-secondary); margin-left: 6px;">${escapeHtml(v)}</span>
+                        </div>
+                        <button class="clean-btn clean-btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="deleteMemory('${escapeHtml(k)}')">✕</button>
+                    `;
+                    list.appendChild(row);
+                });
+            } catch (_) {}
+        }
+
+        async function addMemory() {
+            const key = document.getElementById('mem-key-input')?.value?.trim();
+            const val = document.getElementById('mem-val-input')?.value?.trim();
+            if (!key || !val) {
+                showToast('Please provide both memory key and value');
+                return;
+            }
+
+            await fetch('/api/memories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, value: val })
+            });
+
+            document.getElementById('mem-key-input').value = '';
+            document.getElementById('mem-val-input').value = '';
+            showToast(`Memory saved: ${key}`);
+            loadMemories();
+        }
+
+        async function deleteMemory(key) {
+            await fetch(`/api/memories/${encodeURIComponent(key)}`, { method: 'DELETE' });
+            showToast(`Deleted memory: ${key}`);
+            loadMemories();
+        }
+
+        async function clearAllMemories() {
+            if (!confirm('Clear all stored memories?')) return;
+            await fetch('/api/memories', { method: 'DELETE' });
+            showToast('All memories cleared.');
+            loadMemories();
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // WhatsApp header dot polling
+        async function pollWaDot() {
+            try {
+                const res = await fetch('/api/whatsapp/status');
+                if (!res.ok) return;
+                const d = await res.json();
+                const dot = document.getElementById('header-wa-dot');
+                if (dot) {
+                    dot.style.background = d.status === 'connected' ? '#10b981' : (d.status === 'qr' ? '#f59e0b' : 'var(--text-muted)');
+                }
+            } catch (_) {}
+        }
+
+        // Theme toggle
+        document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-theme');
+            localStorage.setItem('app_theme', isDark ? 'dark' : 'light');
+        });
+        if (localStorage.getItem('app_theme') === 'light') {
+            document.body.classList.remove('dark-theme');
+        }
+
+        // Init values from storage
+        const savedModelId = localStorage.getItem('ripe_model_id') || 'gemini-3.8-flash-high';
+        const savedModelName = localStorage.getItem('ripe_model_name') || 'Gemini 3.8 Flash (High)';
+        selectModel(savedModelId, savedModelName);
+
+        loadMemories();
+        pollWaDot();
+        setInterval(pollWaDot, 3500);
+    </script>
+</body>
+</html>

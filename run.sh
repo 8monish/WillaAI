@@ -12,9 +12,9 @@ HOST="${RIPEAI_HOST:-127.0.0.1}"
 PORT="${RIPEAI_PORT:-8000}"
 
 if [[ -x "$PROJECT_ROOT/venv/bin/uvicorn" ]]; then
-    exec "$PROJECT_ROOT/venv/bin/uvicorn" main:app --host "$HOST" --port "$PORT"
+    exec "$PROJECT_ROOT/venv/bin/uvicorn" main:app --host "$HOST" --port "$PORT" --reload
 elif command -v uvicorn >/dev/null 2>&1; then
-    exec uvicorn main:app --host "$HOST" --port "$PORT"
+    exec uvicorn main:app --host "$HOST" --port "$PORT" --reload
 else
     printf 'uvicorn not found. Install project dependencies with: python3 -m pip install -r requirements.txt\n' >&2
     exit 1
