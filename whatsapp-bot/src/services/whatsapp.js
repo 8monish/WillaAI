@@ -2,6 +2,8 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcodeTerminal = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const os = require('os');
+const path = require('path');
+const fs = require('fs');
 const { config, evaluateMessage, cleanPhoneNumber } = require('../config/config');
 const { generateAIResponse } = require('./ai');
 const { 
@@ -10,6 +12,7 @@ const {
   getSystemStatus, 
   getCwd 
 } = require('./system-agent');
+const { formatForWhatsApp } = require('../utils/formatter');
 const logger = require('../utils/logger');
 
 let client = null;
@@ -94,6 +97,22 @@ function initializeWhatsAppClient() {
   qrBase64 = '';
   logger.info(`Configuring WhatsApp client with LocalAuth directory: ${config.session.dataPath}`);
 
+  // Clean up any stale Chromium singleton lock files before launching
+  try {
+    const sessionDir = path.join(config.session.dataPath, 'session');
+    if (fs.existsSync(sessionDir)) {
+      const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket'];
+      for (const f of lockFiles) {
+        const fullLockPath = path.join(sessionDir, f);
+        if (fs.existsSync(fullLockPath)) {
+          fs.unlinkSync(fullLockPath);
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn('Could not clean up stale Chromium lock:', err.message);
+  }
+
   const clientOptions = {
     authStrategy: new LocalAuth({
       dataPath: config.session.dataPath,
@@ -172,6 +191,44 @@ function initializeWhatsAppClient() {
     }
   });
 
+  /**
+   * Forward incoming WhatsApp prompt directly to the RipeAI main application
+   * so it displays and executes in real-time on the main web page!
+   */
+  async function forwardToMainPage(promptText, sender, msgId) {
+    try {
+      const mainAppUrl = process.env.RIPEAI_BACKEND_URL || 'http://127.0.0.1:8000';
+      logger.info(`[Main Page Dispatcher] Routing prompt to ${mainAppUrl}/api/whatsapp/incoming-prompt`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 95000);
+
+      const res = await fetch(`${mainAppUrl}/api/whatsapp/incoming-prompt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: sender,
+          prompt: promptText,
+          message_id: msgId,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.response) {
+          return data.response;
+        }
+      } else {
+        logger.warn(`Main app returned status ${res.status}. Falling back to local execution.`);
+      }
+    } catch (err) {
+      logger.warn(`Could not bridge prompt to main page (${err.message}). Using local execution fallback.`);
+    }
+    return null;
+  }
+
   // ==========================================
   // Event: Incoming Message (STRICT OWNER FILTER)
   // ==========================================
@@ -200,38 +257,42 @@ function initializeWhatsAppClient() {
         logger.success(`Automatically paired ${senderNumber} as the system owner!`);
       }
 
-      const lower = prompt.trim().toLowerCase();
-      let responseText = '';
+      const messageId = msg.id?._serialized || `wa_${Date.now()}`;
+      
+      // 1. Forward prompt to main page so it displays and executes live on screen
+      let responseText = await forwardToMainPage(prompt, senderNumber, messageId);
 
-      // 1. Quick Helper Commands
-      if (lower === 'help' || lower === '?') {
-        responseText = buildHelpMessage();
-      } else if (lower === 'status') {
-        responseText = getSystemStatus();
-      } else if (lower === 'pwd') {
-        responseText = `📂 *Current Directory:*\n\`${getCwd()}\``;
-      } else if (lower.startsWith('cd ') || lower === 'cd') {
-        responseText = await executeDirectCommand(prompt);
-      } else if (lower === 'clear' || lower === 'reset') {
-        responseText = `🧹 *Session reset.* Ready for fresh instructions.`;
-      } 
-      // 2. Direct Shell Command Prefix ($ or !)
-      else if (prompt.startsWith('$') || prompt.startsWith('!')) {
-        const cmd = prompt.replace(/^[$!]\s*/, '').trim();
-        responseText = await executeDirectCommand(cmd);
-      } 
-      // 3. AI Agent Execution (Native Local Gemini 'agy' or OpenAI)
-      else {
-        if (config.aiEngine === 'agy') {
-          responseText = await runAgyAgent(prompt, config.agy.model);
-        } else {
-          responseText = await generateAIResponse(prompt, { sender: senderNumber });
+      // 2. If main page bridge did not answer (e.g. backend was rebooting), use local fallback
+      if (!responseText) {
+        const lower = prompt.trim().toLowerCase();
+        if (lower === 'help' || lower === '?') {
+          responseText = buildHelpMessage();
+        } else if (lower === 'status') {
+          responseText = getSystemStatus();
+        } else if (lower === 'pwd') {
+          responseText = `📂 *Current Directory:*\n\`${getCwd()}\``;
+        } else if (lower.startsWith('cd ') || lower === 'cd') {
+          responseText = await executeDirectCommand(prompt);
+        } else if (lower === 'clear' || lower === 'reset') {
+          responseText = `🧹 *Session reset.* Ready for fresh instructions.`;
+        } 
+        else if (prompt.startsWith('$') || prompt.startsWith('!')) {
+          const cmd = prompt.replace(/^[$!]\s*/, '').trim();
+          responseText = await executeDirectCommand(cmd);
+        } 
+        else {
+          if (config.aiEngine === 'agy') {
+            responseText = await runAgyAgent(prompt, config.agy.model);
+          } else {
+            responseText = await generateAIResponse(prompt, { sender: senderNumber });
+          }
         }
       }
 
-      // Send threaded reply back to the user
-      await msg.reply(responseText);
-      logger.chat('OUT', senderNumber, responseText);
+      // Format clean WhatsApp markdown and reply
+      const formattedResponse = formatForWhatsApp(responseText);
+      await msg.reply(formattedResponse);
+      logger.chat('OUT', senderNumber, formattedResponse);
 
       // Clear typing indicator
       if (chat) {

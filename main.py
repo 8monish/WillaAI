@@ -4,7 +4,7 @@ import re
 import shutil
 import asyncio
 import subprocess
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -31,6 +31,8 @@ CONFIG_FILE = "config.json"
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 current_cwd = os.path.abspath(os.path.expanduser(os.getenv("RIPEAI_WORKSPACE", PROJECT_DIR)))
 whatsapp_history = []
+chat_event_queues: Set[asyncio.Queue] = set()
+pending_whatsapp_prompts: Dict[str, asyncio.Future] = {}
 
 def load_config() -> Dict[str, str]:
     if os.path.exists(CONFIG_FILE):
@@ -597,19 +599,30 @@ wa_process = None
 def ensure_whatsapp_service_running():
     global wa_process
     try:
-        resp = httpx.get(f"{WA_BRIDGE_URL}/api/whatsapp/status", timeout=1.0)
-        if resp.status_code == 200:
+        if wa_process and wa_process.poll() is None:
+            return True
+    except Exception:
+        pass
+
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.15)
+        res = s.connect_ex(('127.0.0.1', 8008))
+        s.close()
+        if res == 0:
             return True
     except Exception:
         pass
 
     bot_dir = os.path.join(PROJECT_DIR, "whatsapp-bot")
     if os.path.isdir(bot_dir):
+        log_file = open(os.path.join(PROJECT_DIR, "whatsapp-bot.log"), "a", encoding="utf-8")
         wa_process = subprocess.Popen(
             ["node", "src/index.js"],
             cwd=bot_dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stdout=log_file,
+            stderr=log_file
         )
     return True
 
@@ -662,6 +675,158 @@ async def api_wa_disconnect():
     except Exception:
         pass
     return JSONResponse({"status": "disconnected"})
+
+class WhatsAppNotifyPayload(BaseModel):
+    message: str
+
+@app.post("/api/whatsapp/notify-owner")
+async def api_wa_notify_owner(payload: WhatsAppNotifyPayload):
+    if not payload.message:
+        return JSONResponse({"success": False, "reason": "Empty message"})
+    try:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            resp = await client.post(f"{WA_BRIDGE_URL}/api/whatsapp/send-to-owner", json={"message": payload.message})
+            if resp.status_code == 200:
+                return JSONResponse(resp.json())
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+    return JSONResponse({"success": False, "reason": "Failed to contact WhatsApp bridge"})
+
+# ==========================================
+# Real-Time Main Page SSE Event Stream & Remote Prompt Execution
+# ==========================================
+
+conversation_history: List[Dict] = []
+
+def add_to_conversation_history(role: str, content: str, from_whatsapp: bool = False, sender: str = ""):
+    item = {
+        "role": role,
+        "content": content,
+        "from_whatsapp": from_whatsapp,
+        "sender": sender,
+    }
+    conversation_history.append(item)
+    if len(conversation_history) > 60:
+        conversation_history.pop(0)
+    return item
+
+@app.get("/api/chat/history")
+async def get_chat_history():
+    return JSONResponse(conversation_history)
+
+async def broadcast_event(data: dict):
+    if not chat_event_queues:
+        return
+    for q in list(chat_event_queues):
+        try:
+            await q.put(data)
+        except Exception:
+            pass
+
+@app.get("/api/chat/events")
+async def chat_events_stream(request: Request):
+    queue = asyncio.Queue()
+    chat_event_queues.add(queue)
+
+    async def event_generator():
+        try:
+            yield f"data: {json.dumps({'type': 'connected'})}\n\n"
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    msg = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    yield f"data: {json.dumps(msg)}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            chat_event_queues.discard(queue)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
+
+class WhatsAppPromptPayload(BaseModel):
+    sender: str
+    prompt: str
+    message_id: str
+
+@app.post("/api/whatsapp/incoming-prompt")
+async def handle_whatsapp_incoming_prompt(req: WhatsAppPromptPayload):
+    prompt_text = req.prompt.strip()
+    sender_number = req.sender
+
+    # 1. Add user message to conversation history
+    add_to_conversation_history(
+        role="user",
+        content=prompt_text,
+        from_whatsapp=True,
+        sender=sender_number
+    )
+
+    # 2. Immediately broadcast user prompt to all active browser windows
+    await broadcast_event({
+        "type": "user_message",
+        "content": prompt_text,
+        "from_whatsapp": True,
+        "sender": sender_number,
+        "id": req.message_id
+    })
+
+    # 3. Execute prompt and live-stream output events to browser
+    final_output = ""
+    try:
+        if prompt_text.startswith("$ ") or prompt_text.startswith("! "):
+            cmd = prompt_text[2:].strip()
+            await broadcast_event({"type": "action", "command": cmd, "tool": "bash"})
+            out = execute_command(cmd)
+            await broadcast_event({"type": "action_result", "output": out})
+            final_output = f"Executed:\n```bash\n{out}\n```"
+            await broadcast_event({"type": "final", "content": final_output})
+        else:
+            cfg = load_config()
+            model_id = cfg.get("action_ai_model_id", "gemini-3.8-flash-high")
+            async for chunk in run_gemini_stream(prompt_text, model_id):
+                try:
+                    parsed = json.loads(chunk.strip())
+                    await broadcast_event(parsed)
+                    if parsed.get("type") == "final":
+                        final_output = parsed.get("content", "")
+                    elif parsed.get("type") == "delta":
+                        final_output += parsed.get("content", "")
+                except Exception:
+                    pass
+
+        if not final_output:
+            final_output = "Task completed."
+
+        # Add assistant response to history
+        add_to_conversation_history(
+            role="assistant",
+            content=final_output,
+            from_whatsapp=True,
+            sender="RipeAI"
+        )
+
+        return JSONResponse({"status": "success", "response": final_output})
+    except Exception as e:
+        err_msg = f"Error executing prompt: {str(e)}"
+        await broadcast_event({"type": "error", "message": err_msg})
+        return JSONResponse({"status": "error", "response": err_msg}, status_code=500)
+
+class WhatsAppResolvePayload(BaseModel):
+    id: str
+    response: str
+
+@app.post("/api/whatsapp/resolve-prompt")
+async def handle_whatsapp_resolve_prompt(payload: WhatsAppResolvePayload):
+    return JSONResponse({"status": "ok"})
 
 class ConfigPayload(BaseModel):
     action_ai_key: Optional[str] = ""

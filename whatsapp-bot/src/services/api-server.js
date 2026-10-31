@@ -97,6 +97,27 @@ function startApiServer() {
       }
     }
 
+    // POST /api/whatsapp/send-to-owner (two-way sync from Web UI)
+    if (req.method === 'POST' && (url === '/api/whatsapp/send-to-owner' || url === '/send-to-owner' || url === '/send')) {
+      const payload = await parseJsonBody(req);
+      const client = getClient();
+      if (!client || !isClientReady() || !config.owner.phoneNumber) {
+        return sendJson(res, 200, { success: false, reason: 'Client not ready or owner number not set' });
+      }
+      try {
+        const jid = `${config.owner.phoneNumber}@c.us`;
+        const text = payload.message || '';
+        if (text) {
+          await client.sendMessage(jid, text);
+          logger.chat('OUT', config.owner.phoneNumber, text);
+        }
+        return sendJson(res, 200, { success: true });
+      } catch (err) {
+        logger.error('Failed to send message to owner WhatsApp:', err);
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
     // POST /api/whatsapp/disconnect
     if (req.method === 'POST' && (url === '/api/whatsapp/disconnect' || url === '/disconnect')) {
       await stopWhatsAppClient();

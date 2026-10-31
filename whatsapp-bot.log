@@ -1,0 +1,29 @@
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Terminal & Agent[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Interface: WhatsApp Web Emulation (QR / LocalAuth)
+  [2m•[0m Owner DM: +919363936963 (Locked to Owner DM)
+  [2m•[0m AI Engine: Local Antigravity Agent (Model: gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[9:47:03 AM][0m [36mℹ [INFO][0m Using local Gemini agent (agy) for system tools and execution. No API key needed!
+[90m[9:47:03 AM][0m [36mℹ [INFO][0m Configuring WhatsApp client with LocalAuth directory: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[90m[9:47:03 AM][0m [36mℹ [INFO][0m Starting WhatsApp Web client...
+[90m[9:47:03 AM][0m [36mℹ [INFO][0m WhatsApp internal API bridge listening on http://127.0.0.1:8008
+[90m[9:47:17 AM][0m [32m✔ [SUCCESS][0m Authentication credentials recognized. Restoring or persisting session...
+[90m[9:47:17 AM][0m [32m✔ [SUCCESS][0m WhatsApp client is authenticated and actively listening for messages!
+
+[36m════════════════════════════════════════════════════════════[0m
+[1m[32m  RipeAI WhatsApp Remote Control Active[0m
+[90m  --------------------------------------------------------[0m
+  [2m•[0m Owner DM: Locked to: +919363936963
+  [2m•[0m AI Engine: Local agy (gemini-3.8-flash-high)
+  [2m•[0m Workspace: /home/monish/Projects/RipeAI
+  [2m•[0m Session Path: /home/monish/Projects/RipeAI/whatsapp-bot/.wweb_auth
+[36m════════════════════════════════════════════════════════════[0m
+
+[90m[9:47:19 AM][0m [36mℹ [INFO][0m Sending proactive welcome handshake message to owner [919363936963@c.us]...
+[90m[9:47:20 AM][0m [32m✔ [SUCCESS][0m Greeting successfully sent to 919363936963!
