@@ -1,78 +1,74 @@
-# RipeAI
+# WillaAI
 
-RipeAI is a neo-brutalist agentic terminal interface for interacting with your Linux environment through locally installed models. Gemini prompts run in the project workspace and do not go to a hosted model API.
+A self-hosted web dashboard for controlling a Linux machine with AI coding agents, from the browser or from WhatsApp.
 
-Whenever you prompt RipeAI, the selected model streams its response and tool execution in real time, and can run shell commands in the project workspace.
+WillaAI (internally called RipeAI) is a FastAPI backend with a vanilla-JS frontend. It wraps command-line AI agents, streams their output and tool calls live, and gives you a built-in terminal next to the chat.
 
----
-
-## Key Features
-
-- **Local Gemini mode**: Send prompts to the installed Gemini model, with streamed responses and system tool execution in the project workspace.
-- **GPT-6 Luna**: Switch to the locally available coding model for repo analysis and terminal task automation.
-- **Embedded Interactive System Terminal**: Built-in sliding terminal drawer running native Linux bash commands (`monish@ripe:~$`) with quick action chips (`uname -a`, `free -h`, `git status`, etc.).
-- **Direct Shell Prefix**: Prefix any message with `$ ` or `! ` in the chat to execute directly in bash.
-- **Persistent Memory Layer**: Automatically remembers user preferences, file paths, and environment details across sessions using `<remember key="...">...</remember>` tags stored in `memories.json`.
-- **WhatsApp Remote Agent**: Link your WhatsApp via QR code (`neonize`) to control your machine remotely from your phone.
-- **Neo-brutalist interface**: Hard borders, offset shadows, high-contrast accent colors, and real-time streaming.
+> ⚠️ **Local, trusted use only.** The agents run with approvals and sandboxing turned off, and the terminal endpoint runs any shell command it receives. Do not expose this server to the internet.
 
 ---
 
-## Model Flow
+## What it does
+
+- **Agent chat with live streaming**: prompts go to an agent CLI running as a subprocess, and its responses and tool calls stream back to the UI as NDJSON.
+  - **Gemini** through the Antigravity CLI (`agy`), in high, medium and low effort modes
+  - **Codex** through the OpenAI Codex CLI (`codex exec`)
+- **Built-in terminal**: a slide-out terminal that runs bash in the workspace, keeps track of `cd` across commands and times out after 40 seconds. Chat messages starting with `$ ` or `! ` run directly as shell commands.
+- **Persistent memory**: the agent can save facts with `<remember key="…">…</remember>` tags. They're stored in `memories.json` and added to the system prompt in later sessions. You can view and manage them over REST.
+- **WhatsApp remote control**: a Node.js companion service (`whatsapp-web.js`) links your WhatsApp account by QR code and accepts commands only from the owner's DM, so you can send prompts from your phone.
+- **System stats**: CPU, memory and disk usage served at `/api/system/stats`.
+- **Live sync**: server-sent events keep the web UI updated when prompts come in from WhatsApp.
+
+## Architecture
 
 ```
-User Prompt (Web UI or WhatsApp)
-             │
-             ▼
-     RipeAI Backend (FastAPI)
-             │
-    ┌────────┴──────────────────┐
-    ▼                           ▼
-Gemini 3.8 Flash (local)  GPT-6 Luna
-  • Project workspace        • Shell tool execution
-  • Streaming responses      • Direct repository review
-             │
-             ▼
-Real-Time NDJSON Streaming + Live Terminal Execution
+Browser UI ─┐                        ┌─> agy (Gemini)   ─┐
+            ├─> FastAPI (main.py) ───┤                   ├─> shell tools in workspace
+WhatsApp ───┘   (whatsapp-bot, Node) └─> codex exec      ─┘
+                     │
+                     └─> NDJSON stream + SSE events back to clients
 ```
 
----
+## Tech stack
 
-## Quick Start
+**Backend:** Python, FastAPI, Uvicorn, httpx, asyncio subprocess streaming
+**Frontend:** vanilla HTML, CSS and JS (no framework)
+**WhatsApp service:** Node.js, whatsapp-web.js
+**Agents:** Antigravity CLI (`agy`), OpenAI Codex CLI
 
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Getting started
 
-2. **Start RipeAI Server**:
-   ```bash
-   ./run.sh
-   ```
+**Requirements:** Linux, Python 3.10+, Node.js 18+, and at least one of `agy` or `codex` installed and logged in.
 
-3. **Open in Browser**:
-   Navigate to [http://localhost:8000](http://localhost:8000). Click **"Launch RipeAI as Guest"** to immediately start issuing prompts and commands!
+```bash
+pip install -r requirements.txt
+./run.sh                 # starts the server on http://localhost:8000
+```
 
-The **Use Gemini 3.8 Flash (High)** button in the sidebar selects that model. Prompts run in the project folder by default. Set `RIPEAI_WORKSPACE` to use a different folder, or `RIPEAI_PORT` to change the server port.
+Optional environment variables:
 
----
+| Variable | Purpose |
+|---|---|
+| `RIPEAI_WORKSPACE` | Folder the agents and terminal run in (defaults to the project folder) |
+| `RIPEAI_PORT` | Server port (defaults to 8000) |
 
-## WhatsApp Integration (Optional)
+**WhatsApp (optional):** open **Settings → WhatsApp Remote Agent → Link WhatsApp**, scan the QR code under *Linked Devices* in the WhatsApp app, then message your own number.
 
-In RipeAI, WhatsApp connects to your local system engine:
-1. Open **Models / Settings** in the web dashboard.
-2. Under **WhatsApp Remote Agent**, click **Link WhatsApp**.
-3. Scan the QR code with WhatsApp (Linked Devices).
-4. Send a request from your phone to run tasks remotely on your machine.
+## Project structure
 
----
+```
+main.py              FastAPI app: chat, streaming, terminal, memory, WhatsApp bridge
+static/              Web UI (chat, terminal, settings, setup pages)
+whatsapp-bot/        Node.js WhatsApp service
+run.sh               Launcher
+```
 
-## Security
+## Roadmap
 
-RipeAI executes shell commands directly on your Linux environment. While Safe Mode guards against destructive patterns (like `rm -rf /`), RipeAI is designed for local, trusted use. Do not expose this server publicly without authorization or sandboxing layers.
-
----
+- Allow-list or confirmation step for destructive shell commands
+- Authentication on the HTTP API
+- Container sandbox for agent execution
 
 ## License
 
-MIT © RipeAI
+MIT
