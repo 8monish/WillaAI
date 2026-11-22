@@ -44,7 +44,7 @@ export interface Stats {
 }
 
 export interface EngineStatus {
-  api_ready: boolean; agy: boolean; codex: boolean; desktop: boolean; platform: string;
+  api_ready: boolean; agy: boolean; codex: boolean; platform: string;
 }
 
 export const PROVIDERS: { id: string; label: string; hint: string }[] = [

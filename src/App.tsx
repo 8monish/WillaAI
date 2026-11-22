@@ -61,9 +61,7 @@ export default function App() {
             <Show when={status()?.agy}><option value="agy">agy · {settings()?.agy_model}</option></Show>
             <Show when={status()?.codex}><option value="codex">codex</option></Show>
           </select>
-          <Show when={status()?.platform !== "ios"}>
-            <button class={`icon-btn ${showTerm() ? "on" : ""}`} title="Terminal" onClick={() => setShowTerm(!showTerm())}>{">_"}</button>
-          </Show>
+          <button class={`icon-btn ${showTerm() ? "on" : ""}`} title="Terminal" onClick={() => setShowTerm(!showTerm())}>{">_"}</button>
         </header>
 
         <div class="content">

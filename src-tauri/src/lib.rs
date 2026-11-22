@@ -10,18 +10,13 @@ mod tools;
 use std::sync::Arc;
 use tauri::Manager;
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             let paths = app.path();
             let config_dir = paths.app_config_dir()?;
             let data_dir = paths.app_data_dir()?;
-            let workspace = if cfg!(mobile) {
-                paths.document_dir().unwrap_or_else(|_| data_dir.clone())
-            } else {
-                paths.home_dir().unwrap_or_else(|_| data_dir.clone())
-            };
+            let workspace = paths.home_dir().unwrap_or_else(|_| data_dir.clone());
             app.manage::<state::AppState>(Arc::new(state::Inner::new(config_dir, data_dir, workspace)));
             Ok(())
         })

@@ -6,15 +6,13 @@ use std::time::Duration;
 
 pub fn definitions() -> Value {
     let mut tools = vec![];
-    if cfg!(not(target_os = "ios")) {
-        tools.push(func(
-            "run_command",
-            "Run a shell command in the current working directory and return stdout/stderr. \
-             Uses `sh -c` on Linux/macOS/Android and PowerShell on Windows. `cd <dir>` changes the working directory for later calls.",
-            json!({"command": {"type": "string", "description": "The command to run"}}),
-            &["command"],
-        ));
-    }
+    tools.push(func(
+        "run_command",
+        "Run a shell command in the current working directory and return stdout/stderr. \
+         Uses `sh -c` on Linux/macOS and PowerShell on Windows. `cd <dir>` changes the working directory for later calls.",
+        json!({"command": {"type": "string", "description": "The command to run"}}),
+        &["command"],
+    ));
     tools.push(func(
         "read_file",
         "Read a UTF-8 text file. Relative paths resolve against the working directory.",
@@ -27,24 +25,14 @@ pub fn definitions() -> Value {
         json!({"path": {"type": "string"}, "content": {"type": "string"}}),
         &["path", "content"],
     ));
-    tools.push(func(
-        "list_dir",
-        "List the entries of a directory (default: working directory).",
-        json!({"path": {"type": "string"}}),
-        &[],
-    ));
+    tools.push(func("list_dir", "List the entries of a directory (default: working directory).", json!({"path": {"type": "string"}}), &[]));
     tools.push(func(
         "remember",
         "Save a durable fact about the user or their system to long-term memory.",
         json!({"key": {"type": "string"}, "value": {"type": "string"}}),
         &["key", "value"],
     ));
-    tools.push(func(
-        "forget",
-        "Delete a fact from long-term memory.",
-        json!({"key": {"type": "string"}}),
-        &["key"],
-    ));
+    tools.push(func("forget", "Delete a fact from long-term memory.", json!({"key": {"type": "string"}}), &["key"]));
     Value::Array(tools)
 }
 
@@ -80,8 +68,12 @@ pub struct ToolOutcome {
 }
 
 impl ToolOutcome {
-    fn ok(output: impl Into<String>) -> Self { Self { output: output.into(), ok: true, memory: None } }
-    fn err(output: impl Into<String>) -> Self { Self { output: output.into(), ok: false, memory: None } }
+    fn ok(output: impl Into<String>) -> Self {
+        Self { output: output.into(), ok: true, memory: None }
+    }
+    fn err(output: impl Into<String>) -> Self {
+        Self { output: output.into(), ok: false, memory: None }
+    }
 }
 
 pub async fn execute(state: &AppState, name: &str, args: &Value) -> ToolOutcome {

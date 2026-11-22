@@ -1,16 +1,11 @@
 name: Release
 
-# Push a tag like v0.2.0 to build installers for every platform and attach
-# them to a draft GitHub release. Or run it by hand from the Actions tab.
+# Push a tag like v0.2.0 to build installers for Linux, Windows and macOS and
+# attach them to a draft GitHub release. Or run it by hand from the Actions tab.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
-    inputs:
-      ios:
-        description: "Also build iOS (needs Apple signing secrets)"
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -31,7 +26,7 @@ jobs:
             args: "--target x86_64-apple-darwin"
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Linux deps
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
@@ -39,7 +34,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: pnpm }
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -57,60 +52,20 @@ jobs:
           prerelease: ${{ github.ref_type != 'tag' }}
           args: ${{ matrix.args }}
 
-  android:
-    runs-on: ubuntu-22.04
+  # Publishes SHA256SUMS.txt next to the installers so users can check their download.
+  checksums:
+    needs: desktop
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
-      # The action's default package list includes "tools", which Google removed
-      # from the SDK repository, so name the packages explicitly.
-      - uses: android-actions/setup-android@v3
-        with:
-          packages: "platform-tools ndk;27.0.12077973"
-      - uses: pnpm/action-setup@v4
-        with: { version: 10 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm }
-      - uses: dtolnay/rust-toolchain@stable
-        with: { targets: "aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android" }
-      - uses: swatinem/rust-cache@v2
-        with: { workspaces: src-tauri }
-      - run: pnpm install --frozen-lockfile
-      - name: Build APK
-        env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
+      - name: Hash release files
         run: |
-          [ -d src-tauri/gen/android ] || pnpm tauri android init --ci
-          pnpm tauri android build --apk --ci
-      # Unsigned release APK. Add a keystore (see README) to get an installable signed build.
-      - uses: actions/upload-artifact@v4
-        with:
-          name: willa-android
-          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
-
-  ios:
-    if: github.event_name == 'workflow_dispatch' && inputs.ios
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with: { version: 10 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm }
-      - uses: dtolnay/rust-toolchain@stable
-        with: { targets: "aarch64-apple-ios" }
-      - run: pnpm install --frozen-lockfile
-      - name: Build IPA
-        env:
-          APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_PATH: ${{ secrets.APPLE_API_KEY_PATH }}
-        run: |
-          [ -d src-tauri/gen/apple ] || pnpm tauri ios init --ci
-          pnpm tauri ios build --ci
-      - uses: actions/upload-artifact@v4
-        with:
-          name: willa-ios
-          path: src-tauri/gen/apple/build/**/*.ipa
+          mkdir dl && cd dl
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" --pattern '*' --skip-existing
+          rm -f SHA256SUMS.txt
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload "$TAG" SHA256SUMS.txt -R "$GITHUB_REPOSITORY" --clobber

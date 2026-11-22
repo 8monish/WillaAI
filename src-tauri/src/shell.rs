@@ -20,7 +20,11 @@ pub fn resolve(cwd: &Path, p: &str) -> PathBuf {
         None
     };
     let path = expanded.unwrap_or_else(|| PathBuf::from(p));
-    if path.is_absolute() { path } else { cwd.join(path) }
+    if path.is_absolute() {
+        path
+    } else {
+        cwd.join(path)
+    }
 }
 
 fn home() -> Option<PathBuf> {
@@ -40,13 +44,6 @@ pub fn truncate(mut s: String) -> String {
     s
 }
 
-#[cfg(target_os = "ios")]
-pub async fn run(command: &str, cwd: &Path, _timeout: Duration) -> ShellOutput {
-    let _ = command;
-    ShellOutput { output: "Running commands is not supported on iOS.".into(), ok: false, cwd: cwd.to_path_buf() }
-}
-
-#[cfg(not(target_os = "ios"))]
 pub async fn run(command: &str, cwd: &Path, timeout: Duration) -> ShellOutput {
     let cmd = command.trim();
 
@@ -108,7 +105,5 @@ pub async fn run(command: &str, cwd: &Path, timeout: Duration) -> ShellOutput {
 pub fn which(name: &str) -> Option<PathBuf> {
     let path = std::env::var_os("PATH")?;
     let exts: &[&str] = if cfg!(windows) { &[".exe", ".cmd", ".bat", ""] } else { &[""] };
-    std::env::split_paths(&path).find_map(|dir| {
-        exts.iter().map(|e| dir.join(format!("{name}{e}"))).find(|p| p.is_file())
-    })
+    std::env::split_paths(&path).find_map(|dir| exts.iter().map(|e| dir.join(format!("{name}{e}"))).find(|p| p.is_file()))
 }

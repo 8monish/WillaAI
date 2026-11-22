@@ -36,7 +36,11 @@ pub async fn run_agy(state: AppState, prompt: String, model: String, ch: Channel
                             Some("ACTIVE") => {
                                 tool_n += 1;
                                 let cmdline = info.pointer("/parameters/CommandLine").cloned().unwrap_or(json!(name));
-                                let _ = ch.send(AgentEvent::ToolCall { id: format!("agy_{tool_n}"), name, args: json!({ "command": cmdline }) });
+                                let _ = ch.send(AgentEvent::ToolCall {
+                                    id: format!("agy_{tool_n}"),
+                                    name,
+                                    args: json!({ "command": cmdline }),
+                                });
                             }
                             Some("DONE") => {
                                 let out = info.get("output").and_then(Value::as_str).unwrap_or("").to_string();
@@ -100,12 +104,7 @@ fn finish(res: anyhow::Result<()>, text: String, ch: &Channel<AgentEvent>) -> Ve
     }
 }
 
-async fn stream_lines(
-    state: &AppState,
-    mut cmd: Command,
-    cancel: &CancellationToken,
-    mut on_line: impl FnMut(&str),
-) -> anyhow::Result<()> {
+async fn stream_lines(state: &AppState, mut cmd: Command, cancel: &CancellationToken, mut on_line: impl FnMut(&str)) -> anyhow::Result<()> {
     cmd.current_dir(state.cwd()).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).kill_on_drop(true);
     #[cfg(windows)]
     cmd.creation_flags(0x0800_0000);

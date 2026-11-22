@@ -11,10 +11,7 @@ pub struct Memory {
 
 impl Memory {
     pub fn open(path: PathBuf) -> Self {
-        let items = std::fs::read_to_string(&path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default();
+        let items = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
         Self { path, items: Mutex::new(items) }
     }
 
