@@ -17,6 +17,19 @@ export interface Settings {
   temperature: number | null;
   extra_instructions: string;
   theme: "dark" | "light";
+  auto_update: boolean;
+  telegram: { enabled: boolean; bot_token: string; owner_chat_id: number | null };
+  whatsapp: { enabled: boolean };
+  remote_approval: Approval;
+}
+
+export interface IntegrationStatus {
+  telegram: { running: boolean; bot_username: string | null; paired: boolean; pair_code: string | null; error: string | null };
+  whatsapp: {
+    supported: boolean; installed: boolean;
+    state: "off" | "installing" | "starting" | "qr" | "ready" | "error";
+    qr_svg: string | null; me: string | null; message: string | null; log: string[];
+  };
 }
 
 /** OpenAI-format message, kept verbatim so the agent sees exact tool history. */
@@ -76,4 +89,9 @@ export const api = {
   stats: () => invoke<Stats>("system_stats"),
   engineStatus: () => invoke<EngineStatus>("engine_status"),
   listModels: () => invoke<string[]>("list_models"),
+  integrationStatus: () => invoke<IntegrationStatus>("integration_status"),
+  telegramUnpair: () => invoke<void>("telegram_unpair"),
+  whatsappInstall: () => invoke<void>("whatsapp_install"),
+  whatsappLogout: () => invoke<void>("whatsapp_logout"),
+  whatsappRestart: () => invoke<void>("whatsapp_restart"),
 };

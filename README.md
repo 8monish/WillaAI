@@ -33,6 +33,11 @@ There's no Python, no Node server and no localhost port: the UI talks to Rust di
 - Long-term memory, which you can view and delete from the sidebar
 - CPU, RAM and disk stats
 - Light and dark themes
+- **Self-updating:** checks GitHub Releases on startup, then downloads with a progress bar, installs and restarts. Updates are signed, so the app only installs builds made with this project's key
+- **Remote control (optional):**
+  - **Telegram:** create a bot with @BotFather, paste the token in Settings, then send `/start <code>` to pair. Pure Rust, nothing to install
+  - **WhatsApp:** click *Install WhatsApp support*. This uses your Node.js 18+ or downloads a private copy, installs whatsapp-web.js, and reuses your Chrome, Chromium or Edge. Then scan the QR code and message yourself to control the app
+  - Only the paired account is obeyed, and commands ask for "yes/no" in the chat unless you change that
 
 ## Develop
 
@@ -89,10 +94,22 @@ src-tauri/src/
   commands.rs            Tauri commands exposed to the UI
 ```
 
+## Releasing and updates
+
+1. Add the updater signing key as a repo secret named `TAURI_SIGNING_PRIVATE_KEY` (and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` if it has one). Keep a backup of the key: **if it's lost, installed apps can't update anymore.**
+2. Bump `version` in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`.
+3. `git tag vX.Y.Z && git push origin vX.Y.Z`
+
+CI publishes the release with installers, signed update bundles and `latest.json`. Running apps pick it up on their next launch.
+
+Self-update works for the Windows installer (`.exe`/`.msi`), macOS (`.app`/`.dmg`) and Linux **AppImage**. The `.deb` and `.rpm` packages update through your package manager instead.
+
+### Windows
+
+Users download `WillaAI_x.y.z_x64-setup.exe` from the release page. It installs per-user, with no admin needed, adds Start-menu and desktop shortcuts, and fetches WebView2 if it's missing. Updates install silently with a progress bar. The `.msi` is there for IT-managed installs.
+
 ## Roadmap
 
-- Telegram remote control (pure Rust, HTTPS bot API)
-- WhatsApp remote control as an optional sidecar
 - Store API keys in the OS keychain
 - Full PTY terminal (xterm.js + portable-pty)
 

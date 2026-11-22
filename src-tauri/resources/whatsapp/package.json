@@ -1,0 +1,10 @@
+{
+  "name": "willa-whatsapp-bridge",
+  "private": true,
+  "version": "1.0.0",
+  "description": "WillaAI WhatsApp bridge (installed on demand)",
+  "main": "bridge.js",
+  "dependencies": {
+    "whatsapp-web.js": "^1.34.8"
+  }
+}

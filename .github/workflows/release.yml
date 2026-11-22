@@ -1,7 +1,11 @@
 name: Release
 
-# Push a tag like v0.2.0 to build installers for every platform and attach
-# them to a draft GitHub release. Or run it by hand from the Actions tab.
+# Push a tag like v0.3.0 to build installers for every platform and publish a
+# GitHub release. The release includes signed update bundles and latest.json,
+# which installed apps poll to update themselves.
+#
+# Required repo secret: TAURI_SIGNING_PRIVATE_KEY (the updater signing key).
+# Optional: TAURI_SIGNING_PRIVATE_KEY_PASSWORD.
 on:
   push:
     tags: ["v*"]
@@ -50,11 +54,16 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('v__VERSION__-{0}', github.run_number) }}
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('v__VERSION__-build{0}', github.run_number) }}
           releaseName: "WillaAI v__VERSION__"
-          releaseDraft: true
+          releaseBody: "Download the installer for your system below. Installed copies of WillaAI update themselves."
+          # Tag builds are published as the latest release so the in-app updater sees them.
+          releaseDraft: false
           prerelease: ${{ github.ref_type != 'tag' }}
+          includeUpdaterJson: true
           args: ${{ matrix.args }}
 
   android:

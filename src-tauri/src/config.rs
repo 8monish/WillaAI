@@ -34,6 +34,27 @@ pub struct Settings {
     pub temperature: Option<f32>,
     pub extra_instructions: String,
     pub theme: String,
+    /// Check GitHub releases for updates on startup.
+    pub auto_update: bool,
+    pub telegram: TelegramSettings,
+    pub whatsapp: WhatsAppSettings,
+    /// How remote (Telegram/WhatsApp) runs handle commands: ask in chat, or run automatically.
+    pub remote_approval: Approval,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct TelegramSettings {
+    pub enabled: bool,
+    pub bot_token: String,
+    /// Chat id of the paired owner. Only this chat is obeyed.
+    pub owner_chat_id: Option<i64>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WhatsAppSettings {
+    pub enabled: bool,
 }
 
 impl Default for Settings {
@@ -52,6 +73,10 @@ impl Default for Settings {
             temperature: None,
             extra_instructions: String::new(),
             theme: "dark".into(),
+            auto_update: true,
+            telegram: TelegramSettings::default(),
+            whatsapp: WhatsAppSettings::default(),
+            remote_approval: Approval::Ask,
         }
     }
 }
