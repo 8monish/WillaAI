@@ -66,13 +66,20 @@ pub fn handle(state: &AppState, key: &str, text: &str, out: UnboundedSender<Stri
         }
         "/stop" => {
             match sess.run.take() {
-                Some(t) => { t.cancel(); let _ = out.send("Stopped.".into()); }
-                None => { let _ = out.send("Nothing is running.".into()); }
+                Some(t) => {
+                    t.cancel();
+                    let _ = out.send("Stopped.".into());
+                }
+                None => {
+                    let _ = out.send("Nothing is running.".into());
+                }
             }
             return;
         }
         "/new" | "/reset" => {
-            if let Some(t) = sess.run.take() { t.cancel(); }
+            if let Some(t) = sess.run.take() {
+                t.cancel();
+            }
             sess.history.clear();
             let _ = out.send("Started a new conversation.".into());
             return;
@@ -133,10 +140,7 @@ fn event_channel(state: AppState, key: String, out: UnboundedSender<String>) -> 
                     if let Some(sess) = state.hub.remote.sessions.lock().unwrap().get_mut(&key) {
                         sess.pending_approval = Some(id);
                     }
-                    let _ = out.send(format!(
-                        "⚠️ Allow this?\n{}\n\nReply yes or no.",
-                        clip(v["summary"].as_str().unwrap_or(""), 1000)
-                    ));
+                    let _ = out.send(format!("⚠️ Allow this?\n{}\n\nReply yes or no.", clip(v["summary"].as_str().unwrap_or(""), 1000)));
                 }
             }
             Some("tool_result") if v["ok"] == false => {
@@ -203,9 +207,8 @@ mod tests {
 
     #[test]
     fn trim_keeps_user_start() {
-        let mut h: Vec<Value> = (0..50)
-            .map(|i| json!({"role": if i % 3 == 0 { "user" } else if i % 3 == 1 { "assistant" } else { "tool" }}))
-            .collect();
+        let mut h: Vec<Value> =
+            (0..50).map(|i| json!({"role": if i % 3 == 0 { "user" } else if i % 3 == 1 { "assistant" } else { "tool" }})).collect();
         trim_history(&mut h);
         assert!(h.len() <= MAX_HISTORY);
         assert_eq!(h[0]["role"], "user");

@@ -2,7 +2,6 @@
 
 pub mod remote;
 pub mod telegram;
-#[cfg(desktop)]
 pub mod whatsapp;
 
 use serde::Serialize;
@@ -33,15 +32,7 @@ pub struct WhatsAppStatus {
 
 impl Default for WhatsAppStatus {
     fn default() -> Self {
-        Self {
-            supported: cfg!(desktop),
-            installed: false,
-            state: "off".into(),
-            qr_svg: None,
-            me: None,
-            message: None,
-            log: vec![],
-        }
+        Self { supported: true, installed: false, state: "off".into(), qr_svg: None, me: None, message: None, log: vec![] }
     }
 }
 
@@ -58,7 +49,6 @@ pub struct Hub {
     pub telegram: Mutex<TelegramStatus>,
     pub tg_cancel: Mutex<Option<tokio_util::sync::CancellationToken>>,
     pub whatsapp: Mutex<WhatsAppStatus>,
-    #[cfg(desktop)]
     pub wa: Mutex<Option<whatsapp::Bridge>>,
 }
 
@@ -67,12 +57,8 @@ impl Hub {
         let _ = self.app.set(app);
     }
 
-
     pub fn status(&self) -> IntegrationStatus {
-        IntegrationStatus {
-            telegram: self.telegram.lock().unwrap().clone(),
-            whatsapp: self.whatsapp.lock().unwrap().clone(),
-        }
+        IntegrationStatus { telegram: self.telegram.lock().unwrap().clone(), whatsapp: self.whatsapp.lock().unwrap().clone() }
     }
 
     /// Push the current status to the UI.
@@ -112,7 +98,6 @@ pub fn sync(state: &crate::state::AppState) {
     } else if tg_running {
         telegram::stop(state);
     }
-    #[cfg(desktop)]
     {
         let installed = whatsapp::is_installed(state);
         state.hub.update_whatsapp(|w| w.installed = installed);

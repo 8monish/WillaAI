@@ -73,16 +73,10 @@ async fn run_inner(
             body["temperature"] = json!(t);
         }
 
-        let _ = ch.send(AgentEvent::Status {
-            message: if step == 0 { format!("Thinking with {model}…") } else { "Continuing…".into() },
-        });
+        let _ =
+            ch.send(AgentEvent::Status { message: if step == 0 { format!("Thinking with {model}…") } else { "Continuing…".into() } });
 
-        let mut req = state
-            .http
-            .post(&url)
-            .json(&body)
-            .header("HTTP-Referer", "https://github.com/willa-ai")
-            .header("X-Title", "WillaAI");
+        let mut req = state.http.post(&url).json(&body).header("HTTP-Referer", "https://github.com/willa-ai").header("X-Title", "WillaAI");
         if let Some(k) = &key {
             req = req.bearer_auth(k);
         }
@@ -222,12 +216,7 @@ async fn run_inner(
 fn api_error_message(body: &str) -> String {
     serde_json::from_str::<Value>(body)
         .ok()
-        .and_then(|v| {
-            v.pointer("/error/message")
-                .or_else(|| v.pointer("/0/error/message"))
-                .and_then(Value::as_str)
-                .map(str::to_string)
-        })
+        .and_then(|v| v.pointer("/error/message").or_else(|| v.pointer("/0/error/message")).and_then(Value::as_str).map(str::to_string))
         .unwrap_or_else(|| body.chars().take(500).collect())
 }
 
@@ -255,7 +244,10 @@ mod tests {
                     len += sock.read(&mut buf[len..]).await.unwrap();
                     let s = String::from_utf8_lossy(&buf[..len]).to_string();
                     if let Some(h) = s.find("\r\n\r\n") {
-                        let cl: usize = s.lines().find_map(|l| l.to_lowercase().strip_prefix("content-length:").map(|v| v.trim().parse().unwrap())).unwrap_or(0);
+                        let cl: usize = s
+                            .lines()
+                            .find_map(|l| l.to_lowercase().strip_prefix("content-length:").map(|v| v.trim().parse().unwrap()))
+                            .unwrap_or(0);
                         if len >= h + 4 + cl {
                             seen.lock().unwrap().push(serde_json::from_slice(&buf[h + 4..h + 4 + cl]).unwrap());
                             break;
@@ -272,9 +264,14 @@ mod tests {
                     vec![json!({"choices":[{"delta":{"content":"Done: it printed hello-willa."}}]}).to_string()]
                 };
                 let mut body = String::new();
-                for e in events { body.push_str(&format!("data: {e}\n\n")); }
+                for e in events {
+                    body.push_str(&format!("data: {e}\n\n"));
+                }
                 body.push_str("data: [DONE]\n\n");
-                let resp = format!("HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}", body.len());
+                let resp = format!(
+                    "HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+                    body.len()
+                );
                 sock.write_all(resp.as_bytes()).await.unwrap();
                 n += 1;
             }
@@ -332,7 +329,9 @@ mod tests {
         let tmp = std::env::temp_dir().join(format!("willa-test-deny-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         let state: AppState = Arc::new(crate::state::Inner::new(tmp.clone(), tmp.clone(), tmp.clone()));
-        state.save_settings(Settings { provider: "custom".into(), custom_base_url: url, model: "mock".into(), ..Default::default() }).unwrap();
+        state
+            .save_settings(Settings { provider: "custom".into(), custom_base_url: url, model: "mock".into(), ..Default::default() })
+            .unwrap();
 
         let st = state.clone();
         let ch: Channel<AgentEvent> = Channel::new(move |body| {
@@ -340,7 +339,9 @@ mod tests {
                 let v: Value = serde_json::from_str(&s).unwrap();
                 if v["type"] == "approval_required" {
                     let id = v["approval_id"].as_u64().unwrap();
-                    if let Some(tx) = st.approvals.lock().unwrap().remove(&id) { let _ = tx.send(false); }
+                    if let Some(tx) = st.approvals.lock().unwrap().remove(&id) {
+                        let _ = tx.send(false);
+                    }
                 }
             }
             Ok(())

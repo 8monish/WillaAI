@@ -1,0 +1,64 @@
+name: Bug report
+description: Something in WillaAI doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **Found a security problem?** Don't post it here. Follow [SECURITY.md](https://github.com/8monish/WillaAI/blob/main/SECURITY.md) instead.
+        Please remove API keys and personal paths from anything you paste.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Settings and pick …
+        2. Ask the agent to …
+        3. See the error …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: WillaAI version
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux (.deb)
+        - Linux (.rpm)
+        - Linux (AppImage)
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engine
+      options:
+        - Native agent (API)
+        - Antigravity CLI (agy)
+        - Codex CLI (codex)
+  - type: input
+    id: provider
+    attributes:
+      label: Provider and model
+      placeholder: "OpenRouter, anthropic/claude-sonnet-5.5"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages or logs
+      render: text

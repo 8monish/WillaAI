@@ -1,18 +1,45 @@
 # WillaAI
 
-A fast, lightweight agentic AI environment. It's a native app for Linux, Windows, macOS and Android, with a Rust core and a tiny SolidJS UI.
+[![CI](https://github.com/8monish/WillaAI/actions/workflows/ci.yml/badge.svg)](https://github.com/8monish/WillaAI/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/8monish/WillaAI)](https://github.com/8monish/WillaAI/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+A fast, lightweight agentic AI environment. It's a native desktop app for Linux, Windows and macOS, with a Rust core and a tiny SolidJS UI.
 
 Give it a task and the agent runs commands, reads and writes files, and remembers facts across sessions. It streams every step live, and you can approve each command before it runs.
 
 > ⚠️ The agent acts on your real machine. Keep **Command approvals → Ask** on unless you trust the task.
 
+## Install
+
+Download the file for your system from the [latest release](https://github.com/8monish/WillaAI/releases/latest).
+
+| System | File | How to install |
+|---|---|---|
+| Windows 10/11 | `WillaAI_<version>_x64-setup.exe` | Run it. If SmartScreen says "Windows protected your PC", click **More info → Run anyway**. A `.msi` is also provided for managed installs |
+| macOS (Apple Silicon: M1 and later) | `WillaAI_<version>_aarch64.dmg` | Open it and drag WillaAI into Applications (see the macOS note below) |
+| macOS (Intel) | `WillaAI_<version>_x64.dmg` | Same as above |
+| Ubuntu, Debian, Mint | `WillaAI_<version>_amd64.deb` | `sudo apt install ./WillaAI_<version>_amd64.deb` |
+| Fedora, openSUSE | `WillaAI-<version>-1.x86_64.rpm` | `sudo dnf install ./WillaAI-<version>-1.x86_64.rpm` |
+| Any Linux (Arch etc.) | `WillaAI_<version>_amd64.AppImage` | `chmod +x WillaAI_*.AppImage` and run it |
+
+**macOS note:** the app isn't notarized by Apple yet, so the first launch says it "can't be opened" or "is damaged". Run this once, then open it normally:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/WillaAI.app
+```
+
+**Check your download (optional):** each release includes `SHA256SUMS.txt`. Run `sha256sum -c SHA256SUMS.txt --ignore-missing` in the folder you downloaded to.
+
+After installing, open **Settings**, pick a provider (OpenRouter, OpenAI, Anthropic, Gemini, Groq, or a local Ollama) and paste your API key.
+
 ## Stack
 
 | Layer | Tech | Why |
 |---|---|---|
-| App shell | **Tauri 2** | Uses the OS webview instead of bundling Chromium. Installers are ~5–15 MB, and one codebase covers desktop and mobile |
+| App shell | **Tauri 2** | Uses the OS webview instead of bundling Chromium. Installers are 2–3 MB (the AppImage is larger because it bundles its own libraries) |
 | Core | **Rust**: tokio, reqwest (rustls), serde, sysinfo | Async streaming, no runtime to install, small and fast |
-| UI | **SolidJS + Vite + TypeScript** | Fine-grained reactivity with no virtual DOM. ~42 KB gzipped JS |
+| UI | **SolidJS + Vite + TypeScript** | Fine-grained reactivity with no virtual DOM |
 | Markdown | marked + DOMPurify | Small and safe |
 
 There's no Python, no Node server and no localhost port: the UI talks to Rust directly over Tauri IPC.
@@ -21,7 +48,7 @@ There's no Python, no Node server and no localhost port: the UI talks to Rust di
 
 - **Native agent (API)** is the default. Rust runs its own tool-calling loop against any OpenAI-compatible Chat Completions API: **OpenRouter, OpenAI, Anthropic, Google Gemini, Groq, Ollama (local)**, or any custom endpoint (LM Studio, vLLM, llama.cpp).
   Tools: `run_command`, `read_file`, `write_file`, `list_dir`, `remember`, `forget`.
-- **Antigravity CLI (`agy`)** and **Codex CLI (`codex`)** are optional and desktop only. They show up automatically when found on `PATH`, and they run their own tool loops (with their own approvals off), exactly like the old version.
+- **Antigravity CLI (`agy`)** and **Codex CLI (`codex`)** are optional. They show up automatically when found on `PATH`, and they run their own tool loops (with their own approvals off).
 
 ## Features
 
@@ -59,10 +86,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
 pnpm tauri build               # on Linux: AppImage, .deb, .rpm
 ```
 
-Each OS builds its own installers, so use CI for the rest. Push a tag and GitHub Actions (`.github/workflows/release.yml`) builds everything into a draft release:
+Each OS builds its own installers, so CI builds the rest. Pushing a version tag makes GitHub Actions (`.github/workflows/release.yml`) build everything into a draft release, with a `SHA256SUMS.txt`:
 
 ```bash
-git tag v0.2.0 && git push origin v0.2.0
+git tag -s v0.3.0 -m "WillaAI v0.3.0" && git push origin v0.3.0
 ```
 
 | Platform | Output |
@@ -70,15 +97,8 @@ git tag v0.2.0 && git push origin v0.2.0
 | Linux | `.AppImage`, `.deb`, `.rpm` |
 | Windows | `.exe` (NSIS installer), `.msi` |
 | macOS | `.dmg` for Apple Silicon and Intel |
-| Android | `.apk` (unsigned, uploaded as a workflow artifact) |
-| iOS | `.ipa`. Run the workflow by hand with **iOS** ticked; needs Apple signing secrets |
 
-**Signing:** builds are unsigned by default. macOS Gatekeeper and Windows SmartScreen will warn until you add signing certificates ([Tauri signing docs](https://tauri.app/distribute/sign/)). Android needs a keystore to produce an installable release APK.
-
-### Mobile notes
-
-- **Android:** the native agent and its tools work (commands run in the app's sandbox through Android's `sh`). The `agy` and `codex` engines aren't available.
-- **iOS:** Apple doesn't allow apps to start processes, so `run_command` and the terminal are disabled. Chat, file tools inside the app folder, and memory still work.
+**Signing:** builds are unsigned by default, so macOS Gatekeeper and Windows SmartScreen warn on first launch. To remove the warnings, add signing certificates ([Tauri signing docs](https://tauri.app/distribute/sign/)).
 
 ## Layout
 
@@ -88,7 +108,7 @@ src/                     SolidJS UI
   lib/                   IPC bindings, chat store, run controller
 src-tauri/src/
   agent/api.rs           OpenAI-compatible streaming tool loop (+ tests)
-  agent/cli.rs           agy / codex wrappers (desktop)
+  agent/cli.rs           agy / codex wrappers
   tools.rs  shell.rs     tool definitions and cross-platform command runner
   memory.rs config.rs    JSON-backed memory and settings in the OS app-data folder
   commands.rs            Tauri commands exposed to the UI
@@ -113,6 +133,13 @@ Users download `WillaAI_x.y.z_x64-setup.exe` from the release page. It installs 
 - Store API keys in the OS keychain
 - Full PTY terminal (xterm.js + portable-pty)
 
+## Contributing and security
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, test and send a pull request
+- [SECURITY.md](SECURITY.md): how to report a vulnerability privately, and how WillaAI handles your keys and data
+- [CHANGELOG.md](CHANGELOG.md): what changed in each release
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): how we expect people to treat each other
+
 ## License
 
-MIT
+[MIT](LICENSE)

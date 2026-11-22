@@ -12,7 +12,9 @@ use tauri::State;
 use tokio_util::sync::CancellationToken;
 
 type Res<T> = Result<T, String>;
-fn err(e: impl std::fmt::Display) -> String { e.to_string() }
+fn err(e: impl std::fmt::Display) -> String {
+    e.to_string()
+}
 
 #[derive(Deserialize)]
 pub struct ChatRequest {
@@ -35,12 +37,10 @@ pub async fn chat(state: State<'_, AppState>, req: ChatRequest, on_event: Channe
     tauri::async_runtime::spawn(async move {
         let ch = on_event.clone();
         let msgs = match engine.as_str() {
-            #[cfg(desktop)]
             "agy" => {
                 let model = req.model.filter(|m| !m.is_empty()).unwrap_or_else(|| state.settings().agy_model);
                 crate::agent::cli::run_agy(state.clone(), crate::agent::flatten_history(&req.messages), model, ch, cancel.clone()).await
             }
-            #[cfg(desktop)]
             "codex" => crate::agent::cli::run_codex(state.clone(), crate::agent::flatten_history(&req.messages), ch, cancel.clone()).await,
             _ => crate::agent::api::run(state.clone(), req.messages, req.model, None, ch, cancel.clone()).await,
         };
@@ -65,17 +65,16 @@ pub fn resolve_approval(state: State<'_, AppState>, id: u64, approved: bool) {
 }
 
 #[tauri::command]
-pub fn get_settings(state: State<'_, AppState>) -> Settings { state.settings() }
+pub fn get_settings(state: State<'_, AppState>) -> Settings {
+    state.settings()
+}
 
 #[tauri::command]
 pub fn save_settings(state: State<'_, AppState>, mut settings: Settings) -> Res<()> {
     let old = state.settings();
     // Pairing is owned by the backend; the UI can't change it except via telegram_unpair.
-    settings.telegram.owner_chat_id = if settings.telegram.bot_token.trim() == old.telegram.bot_token.trim() {
-        old.telegram.owner_chat_id
-    } else {
-        None
-    };
+    settings.telegram.owner_chat_id =
+        if settings.telegram.bot_token.trim() == old.telegram.bot_token.trim() { old.telegram.owner_chat_id } else { None };
     let tg_changed = settings.telegram.bot_token != old.telegram.bot_token || settings.telegram.enabled != old.telegram.enabled;
     state.save_settings(settings).map_err(err)?;
     if tg_changed {
@@ -102,43 +101,29 @@ pub fn telegram_unpair(state: State<'_, AppState>) -> Res<()> {
 
 #[tauri::command]
 pub fn whatsapp_install(state: State<'_, AppState>) -> Res<()> {
-    #[cfg(desktop)]
-    {
-        crate::integrations::whatsapp::install(state.inner().clone());
-        Ok(())
-    }
-    #[cfg(not(desktop))]
-    {
-        let _ = state;
-        Err("WhatsApp remote control is only available on desktop.".into())
-    }
+    crate::integrations::whatsapp::install(state.inner().clone());
+    Ok(())
 }
 
 #[tauri::command]
 pub fn whatsapp_logout(state: State<'_, AppState>) {
-    #[cfg(desktop)]
     crate::integrations::whatsapp::logout(&state);
-    #[cfg(not(desktop))]
-    let _ = state;
 }
 
 #[tauri::command]
 pub fn whatsapp_restart(state: State<'_, AppState>) {
-    #[cfg(desktop)]
-    {
-        crate::integrations::whatsapp::stop(&state);
-        let st = state.inner().clone();
-        tauri::async_runtime::spawn(async move {
-            tokio::time::sleep(std::time::Duration::from_secs(4)).await;
-            crate::integrations::sync(&st);
-        });
-    }
-    #[cfg(not(desktop))]
-    let _ = state;
+    crate::integrations::whatsapp::stop(&state);
+    let st = state.inner().clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+        crate::integrations::sync(&st);
+    });
 }
 
 #[tauri::command]
-pub fn list_memories(state: State<'_, AppState>) -> BTreeMap<String, String> { state.memory.all() }
+pub fn list_memories(state: State<'_, AppState>) -> BTreeMap<String, String> {
+    state.memory.all()
+}
 
 #[tauri::command]
 pub fn set_memory(state: State<'_, AppState>, key: String, value: String) -> Res<()> {
@@ -151,10 +136,16 @@ pub fn delete_memory(state: State<'_, AppState>, key: String) -> Res<()> {
 }
 
 #[tauri::command]
-pub fn clear_memories(state: State<'_, AppState>) -> Res<()> { state.memory.clear().map_err(err) }
+pub fn clear_memories(state: State<'_, AppState>) -> Res<()> {
+    state.memory.clear().map_err(err)
+}
 
 #[derive(Serialize)]
-pub struct TermResult { output: String, ok: bool, cwd: String }
+pub struct TermResult {
+    output: String,
+    ok: bool,
+    cwd: String,
+}
 
 /// Built-in terminal: runs one command in the session's working directory.
 #[tauri::command]
@@ -166,10 +157,20 @@ pub async fn terminal_exec(state: State<'_, AppState>, command: String) -> Res<T
 }
 
 #[tauri::command]
-pub fn get_cwd(state: State<'_, AppState>) -> String { state.cwd().display().to_string() }
+pub fn get_cwd(state: State<'_, AppState>) -> String {
+    state.cwd().display().to_string()
+}
 
 #[derive(Serialize)]
-pub struct Stats { cpu: f32, mem_used: u64, mem_total: u64, disk_used: u64, disk_total: u64, os: String, host: String }
+pub struct Stats {
+    cpu: f32,
+    mem_used: u64,
+    mem_total: u64,
+    disk_used: u64,
+    disk_total: u64,
+    os: String,
+    host: String,
+}
 
 #[tauri::command]
 pub fn system_stats(state: State<'_, AppState>) -> Stats {
@@ -206,17 +207,20 @@ pub fn system_stats(state: State<'_, AppState>) -> Stats {
 }
 
 #[derive(Serialize)]
-pub struct EngineStatus { api_ready: bool, agy: bool, codex: bool, desktop: bool, platform: &'static str }
+pub struct EngineStatus {
+    api_ready: bool,
+    agy: bool,
+    codex: bool,
+    platform: &'static str,
+}
 
 #[tauri::command]
 pub fn engine_status(state: State<'_, AppState>) -> EngineStatus {
     let s = state.settings();
-    let desktop = cfg!(desktop);
     EngineStatus {
         api_ready: !s.model.is_empty() && (s.api_key().is_some() || matches!(s.provider.as_str(), "ollama" | "custom")),
-        agy: desktop && crate::shell::which("agy").is_some(),
-        codex: desktop && crate::shell::which("codex").is_some(),
-        desktop,
+        agy: crate::shell::which("agy").is_some(),
+        codex: crate::shell::which("codex").is_some(),
         platform: std::env::consts::OS,
     }
 }

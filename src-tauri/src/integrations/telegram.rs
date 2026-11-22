@@ -35,21 +35,12 @@ pub fn restart(state: AppState) {
 }
 
 fn pair_code() -> String {
-    let n = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().subsec_nanos()
-        ^ std::process::id().rotate_left(13);
+    let n = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().subsec_nanos() ^ std::process::id().rotate_left(13);
     format!("{:06}", n % 1_000_000)
 }
 
 async fn call(state: &AppState, token: &str, method: &str, body: Value, timeout: Duration) -> anyhow::Result<Value> {
-    let v: Value = state
-        .http
-        .post(format!("{API}/bot{token}/{method}"))
-        .json(&body)
-        .timeout(timeout)
-        .send()
-        .await?
-        .json()
-        .await?;
+    let v: Value = state.http.post(format!("{API}/bot{token}/{method}")).json(&body).timeout(timeout).send().await?.json().await?;
     if v["ok"] != true {
         anyhow::bail!("{}", v["description"].as_str().unwrap_or("Telegram API error"));
     }
@@ -58,9 +49,8 @@ async fn call(state: &AppState, token: &str, method: &str, body: Value, timeout:
 
 async fn run(state: &AppState, cancel: &CancellationToken) -> anyhow::Result<()> {
     let token = state.settings().telegram.bot_token.trim().to_string();
-    let me = call(state, &token, "getMe", json!({}), Duration::from_secs(20))
-        .await
-        .map_err(|e| match e.downcast_ref::<reqwest::Error>() {
+    let me =
+        call(state, &token, "getMe", json!({}), Duration::from_secs(20)).await.map_err(|e| match e.downcast_ref::<reqwest::Error>() {
             Some(_) => anyhow::anyhow!("Couldn't reach Telegram. Check your internet connection."),
             None => anyhow::anyhow!("Bot token rejected by Telegram: {e}"),
         })?;
@@ -99,7 +89,10 @@ async fn run(state: &AppState, cancel: &CancellationToken) -> anyhow::Result<()>
             _ = cancel.cancelled() => return Ok(()),
         };
         let updates = match res {
-            Ok(u) => { failures = 0; u }
+            Ok(u) => {
+                failures = 0;
+                u
+            }
             Err(e) => {
                 failures += 1;
                 if failures >= 3 {
@@ -130,7 +123,10 @@ async fn run(state: &AppState, cancel: &CancellationToken) -> anyhow::Result<()>
                         let mut s = state.settings();
                         s.telegram.owner_chat_id = Some(chat);
                         state.save_settings(s)?;
-                        state.hub.update_telegram(|s| { s.paired = true; s.pair_code = None; });
+                        state.hub.update_telegram(|s| {
+                            s.paired = true;
+                            s.pair_code = None;
+                        });
                         let _ = tx.send((chat, format!("Paired with WillaAI ✅\n\n{}", super::remote::HELP)));
                     } else if private {
                         let _ = tx.send((chat, "Send the 6-digit pairing code shown in WillaAI → Settings → Telegram.".into()));

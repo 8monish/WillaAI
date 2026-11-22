@@ -19,7 +19,7 @@ pub struct Inner {
     pub http: reqwest::Client,
     pub runs: Mutex<HashMap<u64, CancellationToken>>,
     pub approvals: Mutex<HashMap<u64, oneshot::Sender<bool>>>,
-    /// None on platforms where sysinfo is unsupported (e.g. sandboxed mobile).
+    /// None if sysinfo can't read this system's stats.
     pub sys: Mutex<Option<sysinfo::System>>,
     pub data_dir: PathBuf,
     pub hub: crate::integrations::Hub,
@@ -83,5 +83,9 @@ impl Inner {
 
 fn workspace_or(s: &Settings, fallback: &std::path::Path) -> PathBuf {
     let p = PathBuf::from(s.workspace.trim());
-    if !s.workspace.trim().is_empty() && p.is_dir() { p } else { fallback.to_path_buf() }
+    if !s.workspace.trim().is_empty() && p.is_dir() {
+        p
+    } else {
+        fallback.to_path_buf()
+    }
 }

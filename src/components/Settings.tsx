@@ -87,8 +87,7 @@ export default function Settings(props: { initial: S; status?: EngineStatus; onC
 
           <RemoteControl s={s} set={set} saved={props.initial} />
 
-          <Show when={props.status?.desktop}>
-            <section>
+          <section>
               <h3>Updates</h3>
               <div class="row-inline">
                 <span>WillaAI {version()} — {
@@ -105,7 +104,6 @@ export default function Settings(props: { initial: S; status?: EngineStatus; onC
               <label class="check"><input type="checkbox" checked={s.auto_update} onChange={(e) => set("auto_update", e.currentTarget.checked)} />
                 Check for updates when WillaAI starts</label>
             </section>
-          </Show>
 
           <section>
             <h3>Appearance</h3>

@@ -1,7 +1,6 @@
 //! Agent engines: a native API tool-calling loop, and wrappers around agent CLIs.
 
 pub mod api;
-#[cfg(desktop)]
 pub mod cli;
 
 use crate::events::AgentEvent;
@@ -37,13 +36,7 @@ pub fn system_prompt(state: &AppState) -> String {
 }
 
 /// Ask the UI to approve a tool call. Returns false if denied or cancelled.
-pub async fn request_approval(
-    state: &AppState,
-    ch: &Channel<AgentEvent>,
-    cancel: &CancellationToken,
-    tool: &str,
-    summary: String,
-) -> bool {
+pub async fn request_approval(state: &AppState, ch: &Channel<AgentEvent>, cancel: &CancellationToken, tool: &str, summary: String) -> bool {
     let id = state.next_id();
     let (tx, rx) = oneshot::channel();
     state.approvals.lock().unwrap().insert(id, tx);
@@ -71,9 +64,7 @@ pub fn flatten_history(messages: &[serde_json::Value]) -> String {
         return last.clone();
     }
     let start = texts.len().saturating_sub(7);
-    let ctx: Vec<String> = texts[start..texts.len() - 1]
-        .iter()
-        .map(|(r, c)| format!("[{}]: {}", if r == "user" { "User" } else { "Assistant" }, c))
-        .collect();
+    let ctx: Vec<String> =
+        texts[start..texts.len() - 1].iter().map(|(r, c)| format!("[{}]: {}", if r == "user" { "User" } else { "Assistant" }, c)).collect();
     format!("Previous conversation context:\n{}\n\n[User's latest request]:\n{}", ctx.join("\n"), last)
 }

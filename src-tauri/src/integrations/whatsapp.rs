@@ -24,17 +24,24 @@ pub struct Bridge {
     cancel: CancellationToken,
 }
 
-fn bridge_dir(state: &AppState) -> PathBuf { state.data_dir.join("whatsapp") }
-fn node_dir(state: &AppState) -> PathBuf { state.data_dir.join("node") }
+fn bridge_dir(state: &AppState) -> PathBuf {
+    state.data_dir.join("whatsapp")
+}
+fn node_dir(state: &AppState) -> PathBuf {
+    state.data_dir.join("node")
+}
 
 fn portable_node(state: &AppState) -> PathBuf {
     let d = node_dir(state);
-    if cfg!(windows) { d.join("node.exe") } else { d.join("bin").join("node") }
+    if cfg!(windows) {
+        d.join("node.exe")
+    } else {
+        d.join("bin").join("node")
+    }
 }
 
 pub fn is_installed(state: &AppState) -> bool {
-    bridge_dir(state).join("node_modules").join("whatsapp-web.js").is_dir()
-        && bridge_dir(state).join("bridge.js").is_file()
+    bridge_dir(state).join("node_modules").join("whatsapp-web.js").is_dir() && bridge_dir(state).join("bridge.js").is_file()
 }
 
 /// Node.js 18+ to use: the portable copy first, then the system one.
@@ -80,8 +87,8 @@ fn npm_cli(node: &Path) -> Option<PathBuf> {
     let node = std::fs::canonicalize(node).ok()?;
     let dir = node.parent()?;
     [
-        dir.join("node_modules/npm/bin/npm-cli.js"),          // Windows layout
-        dir.join("../lib/node_modules/npm/bin/npm-cli.js"),   // Unix layout
+        dir.join("node_modules/npm/bin/npm-cli.js"),        // Windows layout
+        dir.join("../lib/node_modules/npm/bin/npm-cli.js"), // Unix layout
     ]
     .into_iter()
     .find(|p| p.is_file())
@@ -185,7 +192,9 @@ async fn install_inner(state: &AppState) -> anyhow::Result<()> {
         }
     }
     while let Some(l) = err.next_line().await? {
-        if !l.contains("npm http ") { hub.wa_log(l); }
+        if !l.contains("npm http ") {
+            hub.wa_log(l);
+        }
     }
     let status = child.wait().await?;
     anyhow::ensure!(status.success(), "npm install exited with {status}");
@@ -203,8 +212,16 @@ async fn download_node(state: &AppState) -> anyhow::Result<()> {
         .and_then(|r| r["version"].as_str())
         .ok_or_else(|| anyhow::anyhow!("couldn't find a Node.js LTS release"))?
         .to_string();
-    let os = match std::env::consts::OS { "windows" => "win", "macos" => "darwin", o => o };
-    let arch = match std::env::consts::ARCH { "x86_64" => "x64", "aarch64" => "arm64", a => a };
+    let os = match std::env::consts::OS {
+        "windows" => "win",
+        "macos" => "darwin",
+        o => o,
+    };
+    let arch = match std::env::consts::ARCH {
+        "x86_64" => "x64",
+        "aarch64" => "arm64",
+        a => a,
+    };
     let ext = if cfg!(windows) { "zip" } else { "tar.gz" };
     let name = format!("node-{version}-{os}-{arch}");
     let url = format!("https://nodejs.org/dist/{version}/{name}.{ext}");
@@ -263,8 +280,14 @@ pub fn start(state: AppState) {
         state.hub.update_whatsapp(|w| {
             w.qr_svg = None;
             match res {
-                Err(e) => { w.state = "error".into(); w.message = Some(e.to_string()); }
-                Ok(()) if w.state != "error" => { w.state = "off".into(); w.message = Some("Stopped.".into()); }
+                Err(e) => {
+                    w.state = "error".into();
+                    w.message = Some(e.to_string());
+                }
+                Ok(()) if w.state != "error" => {
+                    w.state = "off".into();
+                    w.message = Some("Stopped.".into());
+                }
                 _ => {}
             }
         });
@@ -289,10 +312,18 @@ pub fn logout(state: &AppState) {
     } else {
         let _ = std::fs::remove_dir_all(bridge_dir(state).join("session"));
     }
-    state.hub.update_whatsapp(|w| { w.me = None; w.message = Some("Unlinked.".into()); });
+    state.hub.update_whatsapp(|w| {
+        w.me = None;
+        w.message = Some("Unlinked.".into());
+    });
 }
 
-async fn run(state: &AppState, tx: mpsc::UnboundedSender<Value>, mut rx: mpsc::UnboundedReceiver<Value>, cancel: &CancellationToken) -> anyhow::Result<()> {
+async fn run(
+    state: &AppState,
+    tx: mpsc::UnboundedSender<Value>,
+    mut rx: mpsc::UnboundedReceiver<Value>,
+    cancel: &CancellationToken,
+) -> anyhow::Result<()> {
     let node = find_node(state).await.ok_or_else(|| anyhow::anyhow!("Node.js not found. Click Install again."))?;
     let dir = bridge_dir(state);
     let mut cmd = Command::new(&node);
@@ -321,7 +352,9 @@ async fn run(state: &AppState, tx: mpsc::UnboundedSender<Value>, mut rx: mpsc::U
         tauri::async_runtime::spawn(async move {
             while let Some(text) = out_rx.recv().await {
                 for part in super::remote::chunks(&text, 3500) {
-                    if tx.send(json!({"type": "send", "text": part})).is_err() { return; }
+                    if tx.send(json!({"type": "send", "text": part})).is_err() {
+                        return;
+                    }
                 }
             }
         });

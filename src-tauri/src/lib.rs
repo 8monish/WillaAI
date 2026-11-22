@@ -11,23 +11,16 @@ mod tools;
 use std::sync::Arc;
 use tauri::Manager;
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default().plugin(tauri_plugin_opener::init());
-    #[cfg(desktop)]
-    let builder = builder
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_process::init());
-    builder
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let paths = app.path();
             let config_dir = paths.app_config_dir()?;
             let data_dir = paths.app_data_dir()?;
-            let workspace = if cfg!(mobile) {
-                paths.document_dir().unwrap_or_else(|_| data_dir.clone())
-            } else {
-                paths.home_dir().unwrap_or_else(|_| data_dir.clone())
-            };
+            let workspace = paths.home_dir().unwrap_or_else(|_| data_dir.clone());
             let st: state::AppState = Arc::new(state::Inner::new(config_dir, data_dir, workspace));
             st.hub.set_app(app.handle().clone());
             app.manage(st.clone());
@@ -61,12 +54,9 @@ pub fn run() {
         .run(|app, event| {
             // Shut the WhatsApp bridge down cleanly so Chromium doesn't linger.
             if let tauri::RunEvent::Exit = event {
-                #[cfg(desktop)]
                 if let Some(st) = app.try_state::<state::AppState>() {
                     integrations::whatsapp::stop(&st);
                 }
-                #[cfg(not(desktop))]
-                let _ = app;
             }
         });
 }
