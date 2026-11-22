@@ -6,3 +6,7 @@ dist/
 # runtime data from the old Python server
 memories.json
 config.json
+
+# updater signing keys — never commit
+.keys/
+*.key

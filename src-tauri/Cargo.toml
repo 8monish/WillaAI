@@ -1,6 +1,6 @@
 [package]
 name = "willa"
-version = "0.2.0"
+version = "0.3.0"
 description = "WillaAI — a fast, lightweight agentic AI environment"
 authors = ["Zeros&oneS"]
 license = "MIT"
@@ -25,6 +25,15 @@ futures-util = "0.3"
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls", "http2", "charset"] }
 sysinfo = { version = "0.40", default-features = false, features = ["system", "disk"] }
 anyhow = "1"
+qrcode = { version = "0.15", default-features = false, features = ["svg"] }
+flate2 = "1"
+tar = "0.4"
+zip = { version = "9", default-features = false, features = ["deflate"] }
+tauri-plugin-opener = "2.7"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2.14"
+tauri-plugin-process = "2.4"
 
 [profile.release]
 codegen-units = 1

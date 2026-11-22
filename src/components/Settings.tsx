@@ -1,4 +1,7 @@
-import { For, Show, createResource, createSignal } from "solid-js";
+import { For, Show, createSignal, onMount } from "solid-js";
+import { getVersion } from "@tauri-apps/api/app";
+import RemoteControl from "./RemoteControl";
+import { checkForUpdate, error as updError, installUpdate, phase, update } from "../lib/updater";
 import { createStore, unwrap } from "solid-js/store";
 import { api, PROVIDERS, type Settings as S, type EngineStatus } from "../lib/api";
 
@@ -7,6 +10,8 @@ export default function Settings(props: { initial: S; status?: EngineStatus; onC
   const [models, setModels] = createSignal<string[]>([]);
   const [msg, setMsg] = createSignal("");
   const provider = () => PROVIDERS.find((p) => p.id === s.provider)!;
+  const [version, setVersion] = createSignal("");
+  onMount(async () => setVersion(await getVersion()));
 
   async function fetchModels() {
     setMsg("Fetching models…");
@@ -79,6 +84,28 @@ export default function Settings(props: { initial: S; status?: EngineStatus; onC
             <label>Extra instructions<textarea rows="3" value={s.extra_instructions} placeholder="Anything the agent should always know or do"
               onInput={(e) => set("extra_instructions", e.currentTarget.value)} /></label>
           </section>
+
+          <RemoteControl s={s} set={set} saved={props.initial} />
+
+          <Show when={props.status?.desktop}>
+            <section>
+              <h3>Updates</h3>
+              <div class="row-inline">
+                <span>WillaAI {version()} — {
+                  phase() === "checking" ? "checking…" :
+                  phase() === "none" ? "you're up to date" :
+                  phase() === "available" ? `version ${update()?.version} is available` :
+                  phase() === "downloading" || phase() === "installing" ? "updating…" :
+                  phase() === "error" ? `couldn't check (${updError()})` : ""
+                }</span>
+                <Show when={phase() === "available"} fallback={<button class="btn small" onClick={checkForUpdate}>Check now</button>}>
+                  <button class="btn btn-primary small" onClick={installUpdate}>Update now</button>
+                </Show>
+              </div>
+              <label class="check"><input type="checkbox" checked={s.auto_update} onChange={(e) => set("auto_update", e.currentTarget.checked)} />
+                Check for updates when WillaAI starts</label>
+            </section>
+          </Show>
 
           <section>
             <h3>Appearance</h3>

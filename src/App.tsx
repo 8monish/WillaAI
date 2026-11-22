@@ -6,6 +6,8 @@ import Message from "./components/Message";
 import Sidebar from "./components/Sidebar";
 import Terminal from "./components/Terminal";
 import Settings from "./components/Settings";
+import UpdateBanner from "./components/UpdateBanner";
+import { checkForUpdate } from "./lib/updater";
 
 export default function App() {
   const [settings, setSettings] = createSignal<S>();
@@ -23,7 +25,14 @@ export default function App() {
     setSettings(s);
     setEngine(s.engine);
     if (!s.model && s.engine === "api") setShowSettings(true);
+    if (s.auto_update && (await api.engineStatus()).desktop) setTimeout(checkForUpdate, 3000);
   });
+
+  // Always open Settings with fresh values (Telegram pairing etc. change in the background).
+  async function openSettings() {
+    setSettings(await api.getSettings());
+    setShowSettings(true);
+  }
 
   createEffect(() => document.documentElement.setAttribute("data-theme", settings()?.theme ?? "dark"));
 
@@ -49,10 +58,11 @@ export default function App() {
   return (
     <div class="app">
       <Show when={sidebarOpen()}>
-        <Sidebar memories={memories()} refreshMemories={refetchMemories} openSettings={() => setShowSettings(true)} />
+        <Sidebar memories={memories()} refreshMemories={refetchMemories} openSettings={openSettings} />
       </Show>
 
       <main class="main">
+        <UpdateBanner />
         <header class="topbar">
           <button class="icon-btn" title="Toggle sidebar" onClick={() => setSidebarOpen(!sidebarOpen())}>☰</button>
           <span class="title">{activeChat().title}</span>

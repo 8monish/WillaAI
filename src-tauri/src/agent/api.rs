@@ -17,15 +17,17 @@ struct PendingCall {
     args: String,
 }
 
+/// `approval`: override the approval mode from Settings (used for remote runs).
 pub async fn run(
     state: AppState,
     history: Vec<Value>,
     model_override: Option<String>,
+    approval: Option<Approval>,
     ch: Channel<AgentEvent>,
     cancel: CancellationToken,
 ) -> Vec<Value> {
     let mut new_msgs: Vec<Value> = vec![];
-    if let Err(e) = run_inner(&state, history, model_override, &ch, &cancel, &mut new_msgs).await {
+    if let Err(e) = run_inner(&state, history, model_override, approval, &ch, &cancel, &mut new_msgs).await {
         let _ = ch.send(AgentEvent::Error { message: e.to_string() });
     }
     new_msgs
@@ -35,6 +37,7 @@ async fn run_inner(
     state: &AppState,
     history: Vec<Value>,
     model_override: Option<String>,
+    approval: Option<Approval>,
     ch: &Channel<AgentEvent>,
     cancel: &CancellationToken,
     new_msgs: &mut Vec<Value>,
@@ -187,7 +190,7 @@ async fn run_inner(
             let args: Value = serde_json::from_str(&c.args).unwrap_or_else(|_| json!({}));
             let _ = ch.send(AgentEvent::ToolCall { id: c.id.clone(), name: c.name.clone(), args: args.clone() });
 
-            let approved = if tools::needs_approval(&c.name) && state.settings().approval == Approval::Ask {
+            let approved = if tools::needs_approval(&c.name) && approval.unwrap_or(state.settings().approval) == Approval::Ask {
                 super::request_approval(state, ch, cancel, &c.name, tools::summary(&c.name, &args)).await
             } else {
                 true
@@ -304,7 +307,7 @@ mod tests {
             Ok(())
         });
 
-        let msgs = run(state, vec![json!({"role":"user","content":"say hi"})], None, ch, CancellationToken::new()).await;
+        let msgs = run(state, vec![json!({"role":"user","content":"say hi"})], None, None, ch, CancellationToken::new()).await;
 
         let ev = events.lock().unwrap();
         let result = ev.iter().find(|e| e["type"] == "tool_result").expect("tool_result event");
@@ -342,7 +345,7 @@ mod tests {
             }
             Ok(())
         });
-        let msgs = run(state, vec![json!({"role":"user","content":"x"})], None, ch, CancellationToken::new()).await;
+        let msgs = run(state, vec![json!({"role":"user","content":"x"})], None, None, ch, CancellationToken::new()).await;
         assert!(msgs[1]["content"].as_str().unwrap().contains("denied"), "{msgs:?}");
         std::fs::remove_dir_all(tmp).ok();
     }

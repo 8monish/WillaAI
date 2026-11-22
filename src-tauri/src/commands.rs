@@ -42,7 +42,7 @@ pub async fn chat(state: State<'_, AppState>, req: ChatRequest, on_event: Channe
             }
             #[cfg(desktop)]
             "codex" => crate::agent::cli::run_codex(state.clone(), crate::agent::flatten_history(&req.messages), ch, cancel.clone()).await,
-            _ => crate::agent::api::run(state.clone(), req.messages, req.model, ch, cancel.clone()).await,
+            _ => crate::agent::api::run(state.clone(), req.messages, req.model, None, ch, cancel.clone()).await,
         };
         state.runs.lock().unwrap().remove(&id);
         let _ = on_event.send(AgentEvent::Done { messages: msgs });
@@ -68,8 +68,73 @@ pub fn resolve_approval(state: State<'_, AppState>, id: u64, approved: bool) {
 pub fn get_settings(state: State<'_, AppState>) -> Settings { state.settings() }
 
 #[tauri::command]
-pub fn save_settings(state: State<'_, AppState>, settings: Settings) -> Res<()> {
-    state.save_settings(settings).map_err(err)
+pub fn save_settings(state: State<'_, AppState>, mut settings: Settings) -> Res<()> {
+    let old = state.settings();
+    // Pairing is owned by the backend; the UI can't change it except via telegram_unpair.
+    settings.telegram.owner_chat_id = if settings.telegram.bot_token.trim() == old.telegram.bot_token.trim() {
+        old.telegram.owner_chat_id
+    } else {
+        None
+    };
+    let tg_changed = settings.telegram.bot_token != old.telegram.bot_token || settings.telegram.enabled != old.telegram.enabled;
+    state.save_settings(settings).map_err(err)?;
+    if tg_changed {
+        crate::integrations::telegram::stop(&state);
+    }
+    crate::integrations::sync(&state);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn integration_status(state: State<'_, AppState>) -> crate::integrations::IntegrationStatus {
+    state.hub.status()
+}
+
+#[tauri::command]
+pub fn telegram_unpair(state: State<'_, AppState>) -> Res<()> {
+    let mut s = state.settings();
+    s.telegram.owner_chat_id = None;
+    state.save_settings(s).map_err(err)?;
+    crate::integrations::telegram::stop(&state);
+    crate::integrations::sync(&state);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn whatsapp_install(state: State<'_, AppState>) -> Res<()> {
+    #[cfg(desktop)]
+    {
+        crate::integrations::whatsapp::install(state.inner().clone());
+        Ok(())
+    }
+    #[cfg(not(desktop))]
+    {
+        let _ = state;
+        Err("WhatsApp remote control is only available on desktop.".into())
+    }
+}
+
+#[tauri::command]
+pub fn whatsapp_logout(state: State<'_, AppState>) {
+    #[cfg(desktop)]
+    crate::integrations::whatsapp::logout(&state);
+    #[cfg(not(desktop))]
+    let _ = state;
+}
+
+#[tauri::command]
+pub fn whatsapp_restart(state: State<'_, AppState>) {
+    #[cfg(desktop)]
+    {
+        crate::integrations::whatsapp::stop(&state);
+        let st = state.inner().clone();
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+            crate::integrations::sync(&st);
+        });
+    }
+    #[cfg(not(desktop))]
+    let _ = state;
 }
 
 #[tauri::command]

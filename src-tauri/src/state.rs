@@ -21,6 +21,8 @@ pub struct Inner {
     pub approvals: Mutex<HashMap<u64, oneshot::Sender<bool>>>,
     /// None on platforms where sysinfo is unsupported (e.g. sandboxed mobile).
     pub sys: Mutex<Option<sysinfo::System>>,
+    pub data_dir: PathBuf,
+    pub hub: crate::integrations::Hub,
     next_id: AtomicU64,
 }
 
@@ -39,10 +41,12 @@ impl Inner {
             settings_path,
             cwd: Mutex::new(cwd),
             memory: Memory::open(data_dir.join("memories.json")),
+            data_dir: data_dir.clone(),
             http,
             runs: Mutex::new(HashMap::new()),
             approvals: Mutex::new(HashMap::new()),
             sys: Mutex::new(sysinfo::System::new().ok()),
+            hub: Default::default(),
             next_id: AtomicU64::new(1),
         }
     }
