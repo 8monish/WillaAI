@@ -1,14 +1,8 @@
-venv/
-__pycache__/
-*.pyc
+node_modules/
+dist/
 .env
-config.json
-memories.json
-action_ai_whatsapp.sqlite3
-server.log
 *.log
 .DS_Store
-.wweb_auth/
-whatsapp-bot/.wweb_auth/
-whatsapp-bot/.wwebjs_cache/
-whatsapp-bot/node_modules/
+# runtime data from the old Python server
+memories.json
+config.json

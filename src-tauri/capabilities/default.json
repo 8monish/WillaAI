@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window: core IPC only. All system access goes through WillaAI's own Rust commands.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

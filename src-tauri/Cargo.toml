@@ -1,0 +1,37 @@
+[package]
+name = "willa"
+version = "0.2.0"
+description = "WillaAI — a fast, lightweight agentic AI environment"
+authors = ["Zeros&oneS"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.90"
+
+[lib]
+# staticlib/cdylib are needed for Android/iOS builds
+name = "willa_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "time", "sync", "io-util", "fs"] }
+tokio-util = "0.7"
+futures-util = "0.3"
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls", "http2", "charset"] }
+sysinfo = { version = "0.40", default-features = false, features = ["system", "disk"] }
+anyhow = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = 1
