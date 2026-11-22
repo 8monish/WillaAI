@@ -1,0 +1,46 @@
+mod agent;
+mod commands;
+mod config;
+mod events;
+mod memory;
+mod shell;
+mod state;
+mod tools;
+
+use std::sync::Arc;
+use tauri::Manager;
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .setup(|app| {
+            let paths = app.path();
+            let config_dir = paths.app_config_dir()?;
+            let data_dir = paths.app_data_dir()?;
+            let workspace = if cfg!(mobile) {
+                paths.document_dir().unwrap_or_else(|_| data_dir.clone())
+            } else {
+                paths.home_dir().unwrap_or_else(|_| data_dir.clone())
+            };
+            app.manage::<state::AppState>(Arc::new(state::Inner::new(config_dir, data_dir, workspace)));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            commands::chat,
+            commands::cancel_run,
+            commands::resolve_approval,
+            commands::get_settings,
+            commands::save_settings,
+            commands::list_memories,
+            commands::set_memory,
+            commands::delete_memory,
+            commands::clear_memories,
+            commands::terminal_exec,
+            commands::get_cwd,
+            commands::system_stats,
+            commands::engine_status,
+            commands::list_models,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running WillaAI");
+}
